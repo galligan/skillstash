@@ -15,7 +15,7 @@ interface Options {
   createRepoTarget?: string;
   visibility: 'public' | 'private';
   defaultAgent: 'claude' | 'codex';
-  setupLabels: boolean;
+  setupLabels: boolean | null;
 }
 
 const args = process.argv.slice(2);
@@ -87,7 +87,7 @@ if (defaultAgent === 'claude') {
 }
 
 function printHelp() {
-  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <owner/repo|url>     Set origin remote (GitHub shorthand supported)\n  --create-repo [owner/repo]    Create GitHub repo via gh and set origin\n  --public                      Create GitHub repo as public (default)\n  --private                     Create GitHub repo as private\n  --default-agent <name>        Set default agent (claude | codex)\n  --setup-labels               Create default GitHub labels (requires gh)\n  --upstream                    Keep template as upstream (default: true)\n  --no-upstream                 Remove template remote after clone\n  -h, --help                    Show this help\n`);
+  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <owner/repo|url>     Set origin remote (GitHub shorthand supported)\n  --create-repo [owner/repo]    Create GitHub repo via gh and set origin\n  --public                      Create GitHub repo as public (default)\n  --private                     Create GitHub repo as private\n  --default-agent <name>        Set default agent (claude | codex)\n  --setup-labels               Create default GitHub labels (requires gh)\n  --skip-label-setup            Skip label setup when creating a repo\n  --upstream                    Keep template as upstream (default: true)\n  --no-upstream                 Remove template remote after clone\n  -h, --help                    Show this help\n`);
 }
 
 function parseArgs(argv: string[]): { target: string | null; options: Options } {
@@ -97,7 +97,7 @@ function parseArgs(argv: string[]): { target: string | null; options: Options } 
     createRepo: false,
     visibility: 'public',
     defaultAgent: 'claude',
-    setupLabels: false,
+    setupLabels: null,
   };
   let target: string | null = null;
 
@@ -170,6 +170,9 @@ function parseArgs(argv: string[]): { target: string | null; options: Options } 
       case '--setup-labels':
         options.setupLabels = true;
         break;
+      case '--skip-label-setup':
+        options.setupLabels = false;
+        break;
       case '--upstream':
         options.upstream = true;
         break;
@@ -190,6 +193,10 @@ function parseArgs(argv: string[]): { target: string | null; options: Options } 
   if (options.createRepo && options.origin) {
     console.error('Error: --create-repo cannot be used with --origin.');
     process.exit(1);
+  }
+
+  if (options.setupLabels === null) {
+    options.setupLabels = options.createRepo;
   }
 
   return { target, options };
