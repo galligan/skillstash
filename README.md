@@ -1,66 +1,62 @@
-# skills-factory
+# skillstash
 
-A GitHub template repo that turns issues into production-ready agent skills through a structured, automated pipeline.
-
-## Why this exists
-
-You want to file an issue like “A skill for the Apple Human Interface Guidelines” and have the factory do the rest. This repo provides the structure and automation to make that possible.
-
-## Quick start
-
-### Local-first (immediate)
-
-1. Create `skills/my-skill/SKILL.md` with frontmatter.
-2. Use it immediately in your agent session.
-3. Push when ready; validation runs in CI.
-
-See `docs/local-first-workflow.md` for details.
-
-### Issue-driven (async)
-
-1. Open a new issue using the “Create Skill” template.
-2. The factory can research, author, validate, and open a PR.
-3. Merge to make it available to everyone.
-
-See `docs/issue-driven-workflow.md` for details.
-
-## Validation
-
-Run locally:
+**Turn ideas into agent skills in seconds.**
 
 ```bash
-bun run validate
+mkdir -p skills/react-testing
+cat > skills/react-testing/SKILL.md << 'EOF'
+---
+name: react-testing
+description: Best practices for testing React components
+---
+
+# React Testing
+
+When to use: Testing React components with Jest and Testing Library.
+
+## Guidelines
+
+1. Test behavior, not implementation
+2. Use screen queries over container queries
+3. Prefer userEvent over fireEvent
+EOF
 ```
 
-Markdownlint config lives in `.markdownlint-cli2.jsonc`.
+That's it. The skill is live. No deploy, no wait, no ceremony.
 
-## Automation mode
+Or file an issue and let skillstash do the work:
 
-By default, the factory uses built-in `GITHUB_TOKEN` credentials. If a GitHub App is configured, it will switch to App tokens automatically when `github.automation_mode` is set to `auto` in `.skills-factory/config.yml`.
-
-## Pre-commit formatting
-
-Markdown fixes run on pre-commit via `.githooks/pre-commit`. If the hook is not installed automatically, run:
-
-```bash
-bun run hooks:install
+```text
+┌─────────────┐     ┌─────────────────────────────────┐     ┌───────────┐
+│ File Issue  │────▶│  Research → Author → Validate   │────▶│  Merged   │
+│ "I need X"  │     │         (agent loop)            │     │  & Live   │
+└─────────────┘     └─────────────────────────────────┘     └───────────┘
 ```
 
-## Repo layout
+## What is this?
 
-```
-.
-├── AGENTS.md
-├── CLAUDE.md
-├── README.md
-├── skills/
-├── docs/
-├── .skills-factory/config.yml
-├── .agents/
-├── .github/
-├── scripts/
-└── .markdownlint-cli2.jsonc
-```
+A template repo for building your own skill library. Skills are markdown files that teach AI agents how to do specific things—coding patterns, workflows, domain knowledge, whatever you need.
+
+**Local-first**: Skills work the moment you save them. Push to git when you're ready.
+
+**Validated**: Linting and structure checks catch mistakes before they spread.
+
+**Composable**: Build a library of skills your agents can discover and use.
+
+## Get Started
+
+1. **Scaffold a new repo** → `bunx create-skillstash my-skillstash`
+2. **Create a skill** → `skills/my-skill/SKILL.md`
+3. **Use it** → Your agent finds it automatically
+
+## Learn More
+
+| Doc | What it covers |
+|-----|----------------|
+| [docs/README.md](./docs/README.md) | Quick start and overview |
+| [docs/architecture.md](./docs/architecture.md) | How it all works |
+| [docs/faqs.md](./docs/faqs.md) | Common questions |
+| [docs/secrets.md](./docs/secrets.md) | LLM tokens and GitHub secrets |
 
 ## License
 

@@ -1,0 +1,21 @@
+{
+  "name": "skillstash",
+  "owner": {
+    "name": "Skillstash"
+  },
+  "metadata": {
+    "description": "Skillstash plugin marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "skillstash",
+      "source": "./",
+      "description": "Skillstash workflows and skills for authoring agent skills",
+      "version": "0.1.0",
+      "author": {
+        "name": "Skillstash"
+      }
+    }
+  ]
+}

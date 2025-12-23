@@ -1,0 +1,23 @@
+{
+  "name": "create-skillstash",
+  "version": "0.1.0",
+  "description": "Scaffold a Skillstash repo from the template",
+  "type": "module",
+  "bin": {
+    "create-skillstash": "src/cli.ts"
+  },
+  "files": [
+    "src/cli.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "skillstash",
+    "scaffold",
+    "template",
+    "bunx"
+  ],
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}

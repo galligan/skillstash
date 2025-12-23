@@ -1,0 +1,80 @@
+version: 1
+
+# Defaults optimized for speed - override with labels when needed
+defaults:
+  research: minimal          # none | minimal | deep
+  review: skip               # skip | optional | required
+  auto_proceed: true         # No human checkpoints between stages
+  auto_merge: true           # Merge when validation passes
+
+# Label mappings (override defaults per-issue/PR)
+labels:
+  skip_research: "skip:research"
+  skip_review: "skip:review"
+  skip_validation: "skip:validation"
+  deep_research: "research:deep"
+  require_review: "review:required"
+
+# Who can use skip labels
+permissions:
+  skip_labels_allowed:
+    - repo_owner
+    - collaborator
+
+# MCP servers for research phase
+# Enabled MCPs are only used if their required secrets are available
+mcp:
+  - name: firecrawl
+    enabled: true
+  - name: context7
+    enabled: true
+  - name: octocode
+    enabled: true
+
+# Research constraints (when research runs)
+research:
+  max_sources: 10
+  allowed_domains:
+    - developer.apple.com
+    - docs.anthropic.com
+    - platform.openai.com
+    - agentskills.io
+
+# Validation rules
+validation:
+  required_files:
+    - SKILL.md
+  max_skill_lines: 500
+  enforce_kebab_case: true
+  required_frontmatter:
+    - name
+    - description
+
+# Agent configuration
+agents:
+  # Default agent used for all roles unless overridden below.
+  default: claude             # claude | codex
+  # Role-specific overrides. Use "default" to inherit from agents.default.
+  roles:
+    research: default
+    author: default
+    review: default
+
+# Optional workflow sequence. Uncomment to run a multi-step flow.
+# workflow:
+#   - role: research          # research | author | review
+#     agent: default          # default | claude | codex
+#   - role: author
+#     agent: default
+#   - role: review
+#     agent: default
+
+# GitHub integration
+github:
+  automation_mode: auto     # auto | app | builtin
+  app_id_var: SKILLSTASH_APP_ID
+  app_pem_secret: SKILLSTASH_APP_PEM
+
+# Rate limits
+rate_limits:
+  max_agent_runs_per_issue_per_hour: 3
