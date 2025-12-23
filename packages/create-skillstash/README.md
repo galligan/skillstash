@@ -20,6 +20,12 @@ Create under an org or explicit owner:
 bunx create-skillstash my-skillstash --create-repo acme/skillstash
 ```
 
+Set up GitHub labels (requires `gh` and a repo URL):
+
+```bash
+bunx create-skillstash my-skillstash --create-repo --setup-labels
+```
+
 ## Options
 
 ```text
@@ -32,6 +38,7 @@ bunx create-skillstash my-skillstash --create-repo acme/skillstash
 --public                      Create GitHub repo as public (default)
 --private                     Create GitHub repo as private
 --default-agent <name>        Set default agent (claude | codex)
+--setup-labels               Create default GitHub labels (requires gh)
 --upstream                    Add upstream remote (default: true)
 --no-upstream                 Remove template remote after clone
 ```

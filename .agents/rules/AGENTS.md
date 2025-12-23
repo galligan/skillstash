@@ -112,6 +112,7 @@ Use labels on issues to control skillstash workflows:
 
 - **skip:research** - Skip research phase, proceed directly to implementation
 - **skip:review** - Skip peer review, auto-approve after validation
+- **skip:validation** - Skip validation checks (use carefully)
 
 ### Depth Labels
 

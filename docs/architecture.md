@@ -13,7 +13,8 @@ skillstash/
 │       ├── scripts/           # Optional - executable helpers
 │       └── assets/            # Optional - templates, configs
 ├── .skillstash/
-│   └── config.yml             # Skillstash configuration
+│   ├── config.yml             # Skillstash configuration
+│   └── labels.json            # GitHub label defaults
 ├── .claude-plugin/
 │   ├── plugin.json             # Claude plugin manifest
 │   └── marketplace.json        # Claude marketplace (this plugin)

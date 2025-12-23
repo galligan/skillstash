@@ -15,6 +15,7 @@ interface Options {
   createRepoTarget?: string;
   visibility: 'public' | 'private';
   defaultAgent: 'claude' | 'codex';
+  setupLabels: boolean;
 }
 
 const args = process.argv.slice(2);
@@ -50,6 +51,7 @@ const ownerEmail = options.ownerEmail ?? readGitConfig('user.email') ?? undefine
 let originUrl = options.origin;
 const defaultAgent = options.defaultAgent;
 const explicitRepoSlug = options.createRepoTarget;
+const setupLabels = options.setupLabels;
 
 if (options.createRepo) {
   originUrl = await createRepoWithGh(repoName, options.visibility, options.createRepoTarget);
@@ -58,7 +60,12 @@ if (options.createRepo) {
 await updatePluginManifest(targetPath, ownerName, ownerEmail);
 await updateMarketplace(targetPath, marketplaceName, ownerName, ownerEmail);
 await updateDefaultAgent(targetPath, defaultAgent);
-await updateClaudeSettings(targetPath, resolveRepoSlug(explicitRepoSlug, originUrl));
+const repoSlug = resolveRepoSlug(explicitRepoSlug, originUrl);
+await updateClaudeSettings(targetPath, repoSlug);
+
+if (setupLabels) {
+  await setupGitHubLabels(targetPath, repoSlug);
+}
 
 await updateGitRemotes(targetPath, templateUrl, originUrl, options.upstream);
 
@@ -80,7 +87,7 @@ if (defaultAgent === 'claude') {
 }
 
 function printHelp() {
-  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <owner/repo|url>     Set origin remote (GitHub shorthand supported)\n  --create-repo [owner/repo]    Create GitHub repo via gh and set origin\n  --public                      Create GitHub repo as public (default)\n  --private                     Create GitHub repo as private\n  --default-agent <name>        Set default agent (claude | codex)\n  --upstream                    Keep template as upstream (default: true)\n  --no-upstream                 Remove template remote after clone\n  -h, --help                    Show this help\n`);
+  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <owner/repo|url>     Set origin remote (GitHub shorthand supported)\n  --create-repo [owner/repo]    Create GitHub repo via gh and set origin\n  --public                      Create GitHub repo as public (default)\n  --private                     Create GitHub repo as private\n  --default-agent <name>        Set default agent (claude | codex)\n  --setup-labels               Create default GitHub labels (requires gh)\n  --upstream                    Keep template as upstream (default: true)\n  --no-upstream                 Remove template remote after clone\n  -h, --help                    Show this help\n`);
 }
 
 function parseArgs(argv: string[]): { target: string | null; options: Options } {
@@ -90,6 +97,7 @@ function parseArgs(argv: string[]): { target: string | null; options: Options } 
     createRepo: false,
     visibility: 'public',
     defaultAgent: 'claude',
+    setupLabels: false,
   };
   let target: string | null = null;
 
@@ -159,6 +167,9 @@ function parseArgs(argv: string[]): { target: string | null; options: Options } 
         options.defaultAgent = value;
         break;
       }
+      case '--setup-labels':
+        options.setupLabels = true;
+        break;
       case '--upstream':
         options.upstream = true;
         break;
@@ -358,6 +369,40 @@ async function updateDefaultAgent(root: string, agent: 'claude' | 'codex') {
   }
 
   await writeFile(path, lines.join('\n'), 'utf-8');
+}
+
+async function setupGitHubLabels(root: string, repoSlug: string | undefined) {
+  if (!repoSlug) {
+    console.log('Skipping labels: repo slug not available yet.');
+    return;
+  }
+  if (!hasGh()) {
+    console.log('Skipping labels: gh CLI not found.');
+    return;
+  }
+  if (!ghAuthed()) {
+    console.log('Skipping labels: gh is not authenticated.');
+    return;
+  }
+
+  const labelsPath = join(root, '.skillstash', 'labels.json');
+  if (!existsSync(labelsPath)) {
+    console.log('Skipping labels: .skillstash/labels.json not found.');
+    return;
+  }
+
+  const raw = await readFile(labelsPath, 'utf-8');
+  const labels = JSON.parse(raw) as Array<{ name: string; color: string; description?: string }>;
+
+  for (const label of labels) {
+    const args = ['label', 'create', label.name, '--color', label.color, '--repo', repoSlug, '--force'];
+    if (label.description) {
+      args.push('--description', label.description);
+    }
+    run('gh', args);
+  }
+
+  console.log(`Applied ${labels.length} labels to ${repoSlug}.`);
 }
 
 async function updateClaudeSettings(root: string, repoSlug: string | undefined) {

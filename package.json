@@ -10,6 +10,7 @@
     "validate": "bun run scripts/lint/lint-skills.ts",
     "lint:md": "markdownlint-cli2 --config .markdownlint-cli2.jsonc",
     "lint:md:fix": "markdownlint-cli2 --config .markdownlint-cli2.jsonc --fix",
+    "labels:setup": "bun run scripts/setup-github-labels.ts",
     "hooks:install": "bun run scripts/setup-git-hooks.ts",
     "postinstall": "bun run hooks:install"
   },
