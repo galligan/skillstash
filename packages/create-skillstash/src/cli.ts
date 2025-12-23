@@ -52,11 +52,12 @@ await updateGitRemotes(targetPath, templateUrl, options.origin, options.upstream
 console.log('\nSkillstash ready:');
 console.log(`  cd ${target}`);
 if (!options.origin) {
-  console.log('  git remote set-url origin <your-repo-url>');
+  console.log('  git remote add origin https://github.com/<owner>/<repo>.git');
+  console.log('  git push -u origin main');
 }
 
 function printHelp() {
-  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <url>                Set origin remote to your repo URL\n  --upstream                    Add upstream remote (default: true)\n  --no-upstream                 Skip adding upstream remote\n  -h, --help                    Show this help\n`);
+  console.log(`\ncreate-skillstash <dir> [options]\n\nOptions:\n  --template <owner/repo|url>   Template repo (default: galligan/skillstash)\n  --marketplace <name>          Marketplace name (default: <dir> in kebab-case)\n  --owner-name <name>           Marketplace owner name (default: git user.name)\n  --owner-email <email>         Marketplace owner email (default: git user.email)\n  --origin <owner/repo|url>     Set origin remote (GitHub shorthand supported)\n  --upstream                    Keep template as upstream (default: true)\n  --no-upstream                 Remove template remote after clone\n  -h, --help                    Show this help\n`);
 }
 
 function parseArgs(argv: string[]): { target: string | null; options: Options } {
@@ -125,11 +126,32 @@ function normalizeTemplateUrl(template: string): string {
   return `https://github.com/${template}.git`;
 }
 
+function normalizeOriginUrl(origin: string): string {
+  if (origin.startsWith('http://') || origin.startsWith('https://')) {
+    return origin;
+  }
+  if (origin.startsWith('git@')) {
+    return origin;
+  }
+  if (/^[^/\s]+\/[^/\s]+$/.test(origin)) {
+    return `https://github.com/${origin}.git`;
+  }
+  return origin.endsWith('.git') ? origin : origin;
+}
+
 function run(cmd: string, args: string[]) {
   const result = spawnSync(cmd, args, { stdio: 'inherit' });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+function listRemotes(root: string): string[] {
+  const result = spawnSync('git', ['-C', root, 'remote'], { encoding: 'utf-8' });
+  if (result.status !== 0) return [];
+  const output = result.stdout?.trim();
+  if (!output) return [];
+  return output.split('\n').map(line => line.trim()).filter(Boolean);
 }
 
 function isEmptyDir(path: string): boolean {
@@ -212,16 +234,41 @@ async function updateGitRemotes(
   originUrl: string | undefined,
   upstream: boolean,
 ) {
+  const remotes = listRemotes(root);
+  const hasOrigin = remotes.includes('origin');
+  const hasUpstream = remotes.includes('upstream');
+
   if (originUrl) {
-    run('git', ['-C', root, 'remote', 'set-url', 'origin', originUrl]);
+    const normalizedOrigin = normalizeOriginUrl(originUrl);
+    if (hasOrigin) {
+      run('git', ['-C', root, 'remote', 'set-url', 'origin', normalizedOrigin]);
+    } else {
+      run('git', ['-C', root, 'remote', 'add', 'origin', normalizedOrigin]);
+    }
     if (upstream) {
-      run('git', ['-C', root, 'remote', 'add', 'upstream', templateUrl]);
+      if (!hasUpstream) {
+        run('git', ['-C', root, 'remote', 'add', 'upstream', templateUrl]);
+      }
     }
     return;
   }
 
   if (upstream) {
-    // Keep origin pointing to the template; no upstream to avoid duplicates.
+    if (hasOrigin && !hasUpstream) {
+      run('git', ['-C', root, 'remote', 'rename', 'origin', 'upstream']);
+      return;
+    }
+    if (hasOrigin && hasUpstream) {
+      run('git', ['-C', root, 'remote', 'remove', 'origin']);
+      return;
+    }
+    if (!hasOrigin && !hasUpstream) {
+      run('git', ['-C', root, 'remote', 'add', 'upstream', templateUrl]);
+    }
     return;
+  }
+
+  if (hasOrigin) {
+    run('git', ['-C', root, 'remote', 'remove', 'origin']);
   }
 }
