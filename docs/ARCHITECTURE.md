@@ -109,6 +109,21 @@ defaults:
   review: skip           # skip | optional | required
   auto_merge: true       # Merge when validation passes
 
+agents:
+  default: claude        # claude | codex
+  roles:
+    research: default
+    author: default
+    review: default
+
+# workflow:
+#   - role: research
+#     agent: default
+#   - role: author
+#     agent: default
+#   - role: review
+#     agent: default
+
 validation:
   required_files: [SKILL.md]
   max_skill_lines: 500

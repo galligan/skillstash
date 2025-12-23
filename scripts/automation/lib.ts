@@ -31,11 +31,26 @@ export type ValidationConfig = {
   required_frontmatter: string[];
 };
 
+export type AgentName = 'claude' | 'codex';
+export type WorkflowRole = 'research' | 'author' | 'review';
+
+export type AgentsConfig = {
+  default: AgentName;
+  roles: Record<WorkflowRole, string>;
+};
+
+export type WorkflowStep = {
+  role: WorkflowRole;
+  agent: string;
+};
+
 export type StashConfig = {
   defaults: DefaultsConfig;
   labels: LabelsConfig;
   github: GithubConfig;
   validation: ValidationConfig;
+  agents: AgentsConfig;
+  workflow: WorkflowStep[];
 };
 
 const DEFAULT_CONFIG: StashConfig = {
@@ -63,6 +78,15 @@ const DEFAULT_CONFIG: StashConfig = {
     enforce_kebab_case: true,
     required_frontmatter: ['name', 'description'],
   },
+  agents: {
+    default: 'claude',
+    roles: {
+      research: 'default',
+      author: 'default',
+      review: 'default',
+    },
+  },
+  workflow: [],
 };
 
 export async function loadConfig(): Promise<StashConfig> {
@@ -81,6 +105,23 @@ export async function loadConfig(): Promise<StashConfig> {
   const labels = (parsed.labels ?? {}) as Record<string, unknown>;
   const github = (parsed.github ?? {}) as Record<string, unknown>;
   const validation = (parsed.validation ?? {}) as Record<string, unknown>;
+  const agents = (parsed.agents ?? {}) as Record<string, unknown>;
+  const workflow = parsed.workflow;
+
+  const defaultAgent = normalizeDefaultAgent(
+    typeof agents.default === 'string' ? agents.default : agents.provider,
+    DEFAULT_CONFIG.agents.default,
+  );
+  const roleOverrides = (agents.roles ?? {}) as Record<string, unknown>;
+  const alternateReview =
+    typeof agents.alternate_review === 'boolean' ? agents.alternate_review : false;
+  const reviewOverride = normalizeRoleAgent(roleOverrides.review);
+  const reviewAgent =
+    reviewOverride === 'default' && alternateReview
+      ? defaultAgent === 'claude'
+        ? 'codex'
+        : 'claude'
+      : reviewOverride;
 
   return {
     defaults: {
@@ -125,7 +166,84 @@ export async function loadConfig(): Promise<StashConfig> {
         (validation.required_frontmatter as string[]) ??
         DEFAULT_CONFIG.validation.required_frontmatter,
     },
+    agents: {
+      default: defaultAgent,
+      roles: {
+        research: normalizeRoleAgent(roleOverrides.research),
+        author: normalizeRoleAgent(roleOverrides.author),
+        review: reviewAgent,
+      },
+    },
+    workflow: normalizeWorkflow(workflow),
   };
+}
+
+function normalizeDefaultAgent(
+  value: unknown,
+  fallback: AgentName,
+): AgentName {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === 'codex' || normalized === 'claude' ? normalized : fallback;
+}
+
+function normalizeRoleAgent(value: unknown): string {
+  if (typeof value !== 'string') {
+    return 'default';
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === '' ? 'default' : normalized;
+}
+
+function normalizeWorkflow(value: unknown): WorkflowStep[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(item => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const role = typeof item.role === 'string' ? item.role.trim().toLowerCase() : '';
+      if (role !== 'research' && role !== 'author' && role !== 'review') {
+        return null;
+      }
+      const agent = normalizeRoleAgent(item.agent);
+      return { role: role as WorkflowRole, agent };
+    })
+    .filter((item): item is WorkflowStep => Boolean(item));
+}
+
+export function resolveAgent(
+  config: StashConfig,
+  role: WorkflowRole,
+  override?: string,
+): AgentName {
+  const candidate = override ?? config.agents.roles[role] ?? 'default';
+  if (candidate === 'default') {
+    return config.agents.default;
+  }
+  return candidate === 'codex' || candidate === 'claude'
+    ? candidate
+    : config.agents.default;
+}
+
+export function resolveWorkflow(config: StashConfig): Array<{ role: WorkflowRole; agent: AgentName }> {
+  const base =
+    config.workflow.length > 0
+      ? config.workflow
+      : (['research', 'author', 'review'] as WorkflowRole[]).map(role => ({
+          role,
+          agent: config.agents.roles[role] ?? 'default',
+        }));
+
+  return base.map(step => ({
+    role: step.role,
+    agent: resolveAgent(config, step.role, step.agent),
+  }));
 }
 
 export function extractField(body: string, label: string): string | null {

@@ -276,8 +276,20 @@ validation:
 
 # Agent configuration
 agents:
-  provider: claude            # claude | codex
-  alternate_review: false     # Use different provider for review
+  default: claude             # claude | codex
+  roles:
+    research: default
+    author: default
+    review: default
+
+# Optional workflow sequence (uncomment to override roles/default)
+# workflow:
+#   - role: research          # research | author | review
+#     agent: default          # default | claude | codex
+#   - role: author
+#     agent: default
+#   - role: review
+#     agent: default
 
 # GitHub integration
 github:
