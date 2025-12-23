@@ -6,7 +6,7 @@ Skillstash can run agent workflows in GitHub Actions when LLM credentials are av
 
 | Provider | Secret | Notes |
 |----------|--------|-------|
-| Claude Code | `CLAUDE_CODE_OAUTH_TOKEN` | Preferred for the Claude Code Action |
+| Claude Code | `CLAUDE_CODE_OAUTH_TOKEN` | **Preferred** for Claude Code; use OAuth when possible |
 | Claude (API) | `ANTHROPIC_API_KEY` | Fallback if you do not use OAuth |
 | Codex | `OPENAI_API_KEY` | Required for the Codex Action |
 
@@ -18,6 +18,16 @@ Skillstash can run agent workflows in GitHub Actions when LLM credentials are av
 gh secret set CLAUDE_CODE_OAUTH_TOKEN -R owner/repo -b "$CLAUDE_CODE_OAUTH_TOKEN"
 gh secret set OPENAI_API_KEY -R owner/repo -b "$OPENAI_API_KEY"
 ```
+
+## Claude Code OAuth Setup (Recommended)
+
+From inside Claude Code, run:
+
+```text
+/install-github-app
+```
+
+This guided flow installs the Claude GitHub App and provides an OAuth token. Save that token as `CLAUDE_CODE_OAUTH_TOKEN` in your repo secrets.
 
 ## Where to Get Tokens
 
