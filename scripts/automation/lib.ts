@@ -31,14 +31,14 @@ export type ValidationConfig = {
   required_frontmatter: string[];
 };
 
-export type FactoryConfig = {
+export type StashConfig = {
   defaults: DefaultsConfig;
   labels: LabelsConfig;
   github: GithubConfig;
   validation: ValidationConfig;
 };
 
-const DEFAULT_CONFIG: FactoryConfig = {
+const DEFAULT_CONFIG: StashConfig = {
   defaults: {
     research: 'minimal',
     review: 'skip',
@@ -54,8 +54,8 @@ const DEFAULT_CONFIG: FactoryConfig = {
   },
   github: {
     automation_mode: 'auto',
-    app_id_var: 'SKILLS_FACTORY_APP_ID',
-    app_pem_secret: 'SKILLS_FACTORY_APP_PEM',
+    app_id_var: 'SKILLSTASH_APP_ID',
+    app_pem_secret: 'SKILLSTASH_APP_PEM',
   },
   validation: {
     required_files: ['SKILL.md'],
@@ -65,8 +65,8 @@ const DEFAULT_CONFIG: FactoryConfig = {
   },
 };
 
-export async function loadConfig(): Promise<FactoryConfig> {
-  const configPath = join(process.cwd(), '.skills-factory', 'config.yml');
+export async function loadConfig(): Promise<StashConfig> {
+  const configPath = join(process.cwd(), '.skillstash', 'config.yml');
 
   try {
     await stat(configPath);
@@ -199,7 +199,7 @@ export function buildSkillMarkdown(options: {
 
 export function resolveReviewMode(
   labels: string[],
-  config: FactoryConfig,
+  config: StashConfig,
 ): DefaultsConfig['review'] {
   if (labels.includes(config.labels.require_review)) {
     return 'required';
@@ -212,12 +212,12 @@ export function resolveReviewMode(
   return config.defaults.review;
 }
 
-export function shouldAutoMerge(labels: string[], config: FactoryConfig): boolean {
+export function shouldAutoMerge(labels: string[], config: StashConfig): boolean {
   return config.defaults.auto_merge && resolveReviewMode(labels, config) !== 'required';
 }
 
 export function resolveAutomationMode(
-  config: FactoryConfig,
+  config: StashConfig,
   appTokenAvailable: boolean,
 ): 'app' | 'builtin' {
   switch (config.github.automation_mode) {

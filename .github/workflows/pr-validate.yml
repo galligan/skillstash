@@ -6,7 +6,7 @@ on:
       - "skills/**"
       - "scripts/**"
       - "docs/**"
-      - ".skills-factory/**"
+      - ".skillstash/**"
       - ".markdownlint-cli2.jsonc"
       - "AGENTS.md"
       - "CLAUDE.md"

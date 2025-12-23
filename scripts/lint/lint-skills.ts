@@ -126,7 +126,7 @@ function asStringArray(value: unknown, fallback: string[]): string[] {
 }
 
 async function loadConfig(): Promise<RuntimeConfig> {
-  const configPath = join(process.cwd(), '.skills-factory', 'config.yml');
+  const configPath = join(process.cwd(), '.skillstash', 'config.yml');
   const fallback: RuntimeConfig = {
     skillsDir: DEFAULT_CONFIG.skillsDir,
     maxLines: DEFAULT_CONFIG.maxLines,

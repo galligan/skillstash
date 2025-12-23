@@ -22,11 +22,11 @@ jobs:
 
       - name: Generate app token (optional)
         id: app-token
-        if: vars.SKILLS_FACTORY_APP_ID != '' && secrets.SKILLS_FACTORY_APP_PEM != ''
+        if: vars.SKILLSTASH_APP_ID != '' && secrets.SKILLSTASH_APP_PEM != ''
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ vars.SKILLS_FACTORY_APP_ID }}
-          private-key: ${{ secrets.SKILLS_FACTORY_APP_PEM }}
+          app-id: ${{ vars.SKILLSTASH_APP_ID }}
+          private-key: ${{ secrets.SKILLSTASH_APP_PEM }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
 

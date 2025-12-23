@@ -1,10 +1,10 @@
-# Skills Factory
+# Skillstash
 
-This is a skills-factory instance for creating, managing, and distributing AI agent skills.
+This is a skillstash instance for creating, managing, and distributing AI agent skills.
 
 ## Overview
 
-Skills-factory is a local-first system for developing reusable agent capabilities. Skills are self-contained directories in `skills/` that can be installed into any agent environment via symlinks or package managers.
+Skillstash is a local-first system for developing reusable agent capabilities. Skills are self-contained directories in `skills/` that can be installed into any agent environment via symlinks or package managers.
 
 **Core principles:**
 
@@ -106,7 +106,7 @@ All skills MUST pass these automated checks:
 
 ## Label System
 
-Use labels on issues to control factory workflows:
+Use labels on issues to control skillstash workflows:
 
 ### Skip Labels
 
@@ -164,7 +164,7 @@ Use labels on issues to control factory workflows:
 - Check test coverage
 - Provide constructive feedback
 
-### Factory Automation
+### Skillstash Automation
 
 **Permissions:**
 
@@ -189,6 +189,20 @@ Use labels on issues to control factory workflows:
 5. **Depend wisely**: Minimize dependencies, document them clearly
 6. **Tag thoughtfully**: Tags enable discovery, choose carefully
 7. **Describe clearly**: Description is first impression, make it count
+
+## Markdown Formatting
+
+**Always specify a language for fenced code blocks.** Use `text` for directory trees or plain output.
+
+| Pattern | Language |
+|---------|----------|
+| Shell commands | `bash` |
+| Directory trees | `text` |
+| JSON/YAML | `json` / `yaml` |
+| Markdown examples | `markdown` |
+| Plain output | `text` |
+
+Blocks without a language specifier will fail `bun run lint:md`.
 
 ## Common Workflows
 
@@ -229,7 +243,7 @@ EOF
 3. **Keep in repo**: Don't delete, allows old dependents to work
 4. **Remove from catalog**: Exclude from new installations
 
-## Factory Maintenance
+## Skillstash Maintenance
 
 ### Regular Tasks
 

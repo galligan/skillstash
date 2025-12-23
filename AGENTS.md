@@ -4,6 +4,6 @@
 
 ## Project-specific guidance
 
-This is a skills-factory instance. Skills are created in `skills/` directory.
+This is a skillstash instance. Skills are created in `skills/` directory.
 
-<!-- Factory instructions are in .agents/rules/AGENTS.md -->
+<!-- Skillstash instructions are in .agents/rules/AGENTS.md -->

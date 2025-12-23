@@ -1,8 +1,8 @@
-# skills-factory — PLAN.md (v2)
+# skillstash — PLAN.md (v2)
 
 ## 1. Why this exists
 
-You want to file an issue like _"A skill for the Apple Human Interface Guidelines"_ and have the factory do the rest.
+You want to file an issue like _"A skill for the Apple Human Interface Guidelines"_ and have skillstash do the rest.
 
 That's it. That's the north star.
 
@@ -26,7 +26,7 @@ Issue → Research Agent → Authoring Agent → Validation → Review Agent →
 This repo is simultaneously:
 
 1. **A skill workspace** — where skills get authored, reviewed, and maintained
-2. **A factory** — GitHub Actions orchestrate research, drafting, review, linting, and auto-merge
+2. **A skillstash** — GitHub Actions orchestrate research, drafting, review, linting, and auto-merge
 3. **A distribution surface** — usable as a Claude Code plugin _and_ a Codex-ready repo
 
 ### Design philosophy
@@ -39,7 +39,7 @@ This repo is simultaneously:
 
 **Configuration-driven control.** A single YAML file controls defaults. Labels provide per-issue/PR escape hatches. Smart detection enables MCPs only when credentials are available.
 
-**Back-and-forth is built in.** You can converse with agents in issues and PRs. Comment `@skills-factory research more on accessibility guidelines` and the factory responds.
+**Back-and-forth is built in.** You can converse with agents in issues and PRs. Comment `@skillstash research more on accessibility guidelines` and skillstash responds.
 
 **Template-first.** You clone this template and own it. Others can fork theirs. The skills you create can then be shared via plugin marketplaces or installed directly.
 
@@ -72,7 +72,7 @@ See `docs/local-first-workflow.md` for details.
 
 ### 2.2. Issue-Driven (Async Creation)
 
-For when you want the factory to do the work:
+For when you want skillstash to do the work:
 
 ```
 You → File issue → Agent creates skill → Merge → You git pull → Use
@@ -81,7 +81,7 @@ You → File issue → Agent creates skill → Merge → You git pull → Use
 **Steps:**
 
 1. Open issue using template
-2. Factory creates branch + runs research (if enabled)
+2. Skillstash creates branch + runs research (if enabled)
 3. Authoring agent writes SKILL.md
 4. Validation runs
 5. Auto-merge (if enabled)
@@ -128,7 +128,7 @@ Labels override config defaults per-issue or per-PR:
 
 ### Root stays clean
 
-All factory machinery lives in hidden directories. The only visible top-level directories are `skills/`, `docs/`, and `scripts/`.
+All skillstash machinery lives in hidden directories. The only visible top-level directories are `skills/`, `docs/`, and `scripts/`.
 
 ### One repo, multiple ecosystems
 
@@ -163,12 +163,12 @@ Canonical sources live in one place. Tool-specific adapters are generated:
 │   ├── labels.md                        # Label reference
 │   └── llm-url-generation.md            # Creating issues via ChatGPT/Claude.ai
 │
-├── .skills-factory/
-│   └── config.yml                       # Factory configuration
+├── .skillstash/
+│   └── config.yml                       # Skillstash configuration
 │
 ├── .agents/
 │   ├── rules/
-│   │   └── AGENTS.md                    # Factory instructions (shared by both tools)
+│   │   └── AGENTS.md                    # Skillstash instructions (shared by both tools)
 │   ├── skills/
 │   │   ├── skills-authoring/
 │   │   ├── skills-research/
@@ -212,14 +212,14 @@ AGENTS.md (root)              ← User customization
     ↓ referenced by
 CLAUDE.md (root)              ← Points Claude to AGENTS.md
     ↓ also imports
-.agents/rules/AGENTS.md       ← Factory instructions (shared by both tools)
+.agents/rules/AGENTS.md       ← Skillstash instructions (shared by both tools)
 ```
 
 ---
 
 ## 5. Configuration
 
-**File:** `.skills-factory/config.yml`
+**File:** `.skillstash/config.yml`
 
 ```yaml
 version: 1
@@ -281,8 +281,8 @@ agents:
 
 # GitHub integration
 github:
-  app_id_var: SKILLS_FACTORY_APP_ID
-  app_pem_secret: SKILLS_FACTORY_APP_PEM
+  app_id_var: SKILLSTASH_APP_ID
+  app_pem_secret: SKILLSTASH_APP_PEM
 
 # Rate limits
 rate_limits:
@@ -348,16 +348,16 @@ Auto-merge when review passes
 
 | Command | Effect |
 |---------|--------|
-| `@skills-factory research` | Re-run research agent with additional context |
-| `@skills-factory build` | Trigger authoring agent |
-| `@skills-factory review` | Trigger review agent |
-| `@skills-factory merge` | Attempt auto-merge if checks pass |
+| `@skillstash research` | Re-run research agent with additional context |
+| `@skillstash build` | Trigger authoring agent |
+| `@skillstash review` | Trigger review agent |
+| `@skillstash merge` | Attempt auto-merge if checks pass |
 
 **Loop prevention:** Max 3 invocations per hour per issue (configurable).
 
 ### 6.4. Fast-path for config changes
 
-When the only changed file is `.skills-factory/config.yml` and the actor is a repo owner:
+When the only changed file is `.skillstash/config.yml` and the actor is a repo owner:
 
 1. Skip research/authoring agents
 2. Run config validation only
@@ -508,7 +508,7 @@ PRs created by `GITHUB_TOKEN` won't trigger workflows. Use a GitHub App:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `issue-create-skill.yml` | Issue labeled `skill:create` | Create branch, run research, open draft PR |
-| `pr-author-skill.yml` | Draft PR or `@skills-factory build` | Run authoring agent |
+| `pr-author-skill.yml` | Draft PR or `@skillstash build` | Run authoring agent |
 | `pr-validate.yml` | Any PR touching `skills/**` | Lint, validate, check frontmatter |
 | `pr-review-skill.yml` | PR ready for review | Run review agent (if not skipped) |
 | `pr-automerge.yml` | All checks pass | Merge and cleanup `.research/` |
@@ -547,10 +547,10 @@ This repo is a single installable plugin bundling all skills in `skills/`.
 
 ```bash
 # Add marketplace (account name is the namespace)
-/plugin marketplace add galligan/skills-factory
+/plugin marketplace add galligan/skillstash
 
 # Install
-/plugin install skills-factory@galligan
+/plugin install skillstash@galligan
 ```
 
 ### As Codex-ready repo
@@ -581,9 +581,9 @@ Skills follow the Agent Skills spec (`agentskills.io`), working across Claude Co
 ### Phase 1: Local-First Foundation
 
 - [ ] Create repo structure
-- [ ] `.skills-factory/config.yml` with defaults
+- [ ] `.skillstash/config.yml` with defaults
 - [ ] Root `AGENTS.md` + `CLAUDE.md`
-- [ ] `.agents/rules/AGENTS.md` (factory instructions)
+- [ ] `.agents/rules/AGENTS.md` (skillstash instructions)
 - [ ] One example skill (`skills/example/`)
 - [ ] `docs/local-first-workflow.md`
 - [ ] Basic validation script
@@ -642,7 +642,7 @@ Skills follow the Agent Skills spec (`agentskills.io`), working across Claude Co
 
 | Question | Decision | Rationale |
 |----------|----------|-----------|
-| Config location | `.skills-factory/config.yml` | Clear namespace, not confused with other tools |
+| Config location | `.skillstash/config.yml` | Clear namespace, not confused with other tools |
 | Default research | `minimal` | Speed first, deep research opt-in via label |
 | Default review | `skip` | Validation script is enough for personal use |
 | Auto-proceed | `true` | No human checkpoints by default |

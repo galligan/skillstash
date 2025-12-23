@@ -1,8 +1,8 @@
 {
-  "name": "skills-factory",
+  "name": "skillstash",
   "version": "0.1.0",
   "type": "module",
-  "description": "GitHub template repo that turns issues into production-ready agent skills through structured, automated pipelines",
+  "description": "GitHub template repo that turns issues into production-ready agent skills through structured, automated workflows",
   "scripts": {
     "validate": "bun run scripts/lint/lint-skills.ts",
     "lint:md": "markdownlint-cli2 --config .markdownlint-cli2.jsonc",
