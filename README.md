@@ -48,7 +48,7 @@ bun run hooks:install
 
 ## Repo layout
 
-```
+```text
 .
 ├── AGENTS.md
 ├── CLAUDE.md
