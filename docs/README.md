@@ -10,6 +10,12 @@ This is a skillstash instance for creating, managing, and distributing AI agent 
 bunx create-skillstash my-skillstash
 ```
 
+Create a GitHub repo automatically (requires `gh`):
+
+```bash
+bunx create-skillstash my-skillstash --create-repo --public
+```
+
 **Create a skill locally (fastest):**
 
 ```bash
