@@ -12,6 +12,8 @@ To set up the default label set in a new repo:
 bun run labels:setup
 ```
 
+If you scaffold with `create-skillstash --create-repo`, label setup runs automatically unless you pass `--skip-label-setup`.
+
 ### Skip Labels
 
 | Label | Effect |
