@@ -47,6 +47,7 @@ bun run lint:md     # Check markdown formatting
 |----------|---------|
 | [architecture.md](./architecture.md) | System design, directory structure, configuration |
 | [faqs.md](./faqs.md) | Common questions, labels, troubleshooting |
+| [github-settings.md](./github-settings.md) | Recommended GitHub repo settings and branch protection |
 | [secrets.md](./secrets.md) | LLM tokens and GitHub Actions secrets |
 
 ## Key Concepts

@@ -205,15 +205,33 @@ Use labels on issues to control skillstash workflows:
 
 Blocks without a language specifier will fail `bun run lint:md`.
 
+## Branch Naming Convention
+
+When creating branches for skill work, use this naming pattern:
+
+| Pattern | Use case |
+|---------|----------|
+| `skill/add-<slug>` | Creating a new skill |
+| `skill/update-<slug>` | Modifying an existing skill |
+| `skill/remove-<slug>` | Deleting a skill |
+
+Examples:
+
+```text
+skill/add-debugging-workflow
+skill/update-commit-message
+skill/remove-deprecated-helper
+```
+
+The `merge-readiness` check enforces this convention for PRs that touch `skills/**`. PRs with incorrect branch names will fail the check.
+
 ## Common Workflows
 
 ### Creating a New Skill
 
 ```bash
-# 1. Create directory
+# 1. Create skill directory and SKILL.md
 mkdir -p skills/my-new-skill
-
-# 2. Create SKILL.md with frontmatter
 cat > skills/my-new-skill/SKILL.md << 'EOF'
 ---
 name: my-new-skill
@@ -225,8 +243,12 @@ description: Does something useful
 [Content here]
 EOF
 
-# 3. Implement, test, validate
-# 4. Commit when ready
+# 2. Create branch with correct naming convention
+git checkout -b skill/add-my-new-skill
+
+# 3. Commit and submit PR
+gt create -am "feat: add my-new-skill"
+gt submit --no-interactive
 ```
 
 ### Updating an Existing Skill

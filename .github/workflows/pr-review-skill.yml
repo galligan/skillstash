@@ -18,18 +18,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Generate app token (optional)
-        id: app-token
-        if: vars.SKILLSTASH_APP_ID != '' && secrets.SKILLSTASH_APP_PEM != ''
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.SKILLSTASH_APP_ID }}
-          private-key: ${{ secrets.SKILLSTASH_APP_PEM }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
-
       - name: Review gate
         env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ github.token }}
         run: bun run scripts/automation/pr-review.ts

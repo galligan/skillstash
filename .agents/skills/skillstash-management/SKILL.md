@@ -112,26 +112,43 @@ bun run validate
 
 No git push required for local use.
 
+## Branch Naming Convention
+
+Skill branches **must** follow this pattern:
+
+| Pattern | Use case |
+|---------|----------|
+| `skill/add-<slug>` | Creating a new skill |
+| `skill/update-<slug>` | Modifying an existing skill |
+| `skill/remove-<slug>` | Deleting a skill |
+
+The `merge-readiness` check enforces this. PRs with wrong branch names will fail.
+
 ## Pushing for Permanence
 
 When the skill works locally:
 
 ```bash
-# Create branch
-git checkout -b add-my-skill
+# Create branch with correct naming
+git checkout -b skill/add-my-skill
 
-# Commit
-git add skills/my-skill/
-git commit -m "Add my-skill for [purpose]"
-
-# Push
-git push origin add-my-skill
-
-# Create PR
-gh pr create --title "Add my-skill" --body "Adds skill for [purpose]"
+# Commit and push with Graphite
+gt create -am "feat: add my-skill for [purpose]"
+gt submit --no-interactive
 ```
 
-CI validates automatically. Merge when passing.
+## Merge Readiness
+
+PRs touching `skills/**` run the `merge-readiness` check which validates:
+
+| Check | Blocking |
+|-------|----------|
+| Branch naming (`skill/*`) | Yes |
+| Required labels exist | No (warning) |
+| Auto-merge enabled | No (warning) |
+| Merge settings correct | No (warning) |
+
+Once checks pass, enable auto-merge on the PR. It merges automatically when validation completes.
 
 ## Optional Supporting Files
 

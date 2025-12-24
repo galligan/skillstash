@@ -122,7 +122,6 @@ Comment on an issue to trigger actions:
 defaults:
   research: minimal      # none | minimal | deep
   review: skip           # skip | optional | required
-  auto_merge: true       # Merge when validation passes
 
 agents:
   default: claude        # claude | codex
