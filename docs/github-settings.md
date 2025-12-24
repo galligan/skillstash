@@ -145,3 +145,36 @@ If labels are missing, run:
 ```bash
 bun run labels:setup
 ```
+
+## Skills Packaging Pipeline
+
+When skills merge to main, the `release-skills` workflow automatically:
+
+1. Packages each changed skill into a versioned .zip file
+2. Computes SHA256 checksums for integrity verification
+3. Creates GitHub releases with the packaged assets
+
+### Versioning
+
+Add a `version` field to your skill's frontmatter for versioned releases:
+
+```yaml
+---
+name: my-skill
+description: What this skill does
+version: 1.0.0
+---
+```
+
+Release tags follow the pattern `{skill-name}-v{version}` (e.g., `my-skill-v1.0.0`).
+
+Skills without a version field will package as `{skill-name}.zip` without a version suffix.
+
+### Validation
+
+PRs touching `skills/**` are validated by both:
+
+1. **Local validator** (`bun run validate`) - checks naming, structure, line limits
+2. **Skills packager** - ensures the skill will package correctly
+
+Both must pass before merge.
