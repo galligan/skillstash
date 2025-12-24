@@ -114,7 +114,8 @@ Common cause: Code blocks without language specifier. Use `text` for plain outpu
 
 ### Auto-Merge Not Working
 
-- Check `auto_merge: true` in config
-- Ensure all validations pass
-- Review may be required (check labels)
-- Branch protection rules may block it
+- Skillstash relies on GitHub's native auto-merge feature
+- Enable auto-merge on your PR through GitHub's UI or API
+- Ensure all validations and required checks pass
+- Review may be required (check labels and branch protection rules)
+- Branch protection rules may block auto-merge

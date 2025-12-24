@@ -5,7 +5,6 @@ defaults:
   research: minimal          # none | minimal | deep
   review: skip               # skip | optional | required
   auto_proceed: true         # No human checkpoints between stages
-  auto_merge: true           # Merge when validation passes
 
 # Label mappings (override defaults per-issue/PR)
 labels:
@@ -68,12 +67,6 @@ agents:
 #     agent: default
 #   - role: review
 #     agent: default
-
-# GitHub integration
-github:
-  automation_mode: auto     # auto | app | builtin
-  app_id_var: SKILLSTASH_APP_ID
-  app_pem_secret: SKILLSTASH_APP_PEM
 
 # Rate limits
 rate_limits:

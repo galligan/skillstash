@@ -7,7 +7,6 @@ export type DefaultsConfig = {
   research: 'none' | 'minimal' | 'deep';
   review: 'skip' | 'optional' | 'required';
   auto_proceed: boolean;
-  auto_merge: boolean;
 };
 
 export type LabelsConfig = {
@@ -16,12 +15,6 @@ export type LabelsConfig = {
   skip_validation: string;
   deep_research: string;
   require_review: string;
-};
-
-export type GithubConfig = {
-  automation_mode: 'auto' | 'app' | 'builtin';
-  app_id_var: string;
-  app_pem_secret: string;
 };
 
 export type ValidationConfig = {
@@ -47,7 +40,6 @@ export type WorkflowStep = {
 export type StashConfig = {
   defaults: DefaultsConfig;
   labels: LabelsConfig;
-  github: GithubConfig;
   validation: ValidationConfig;
   agents: AgentsConfig;
   workflow: WorkflowStep[];
@@ -58,7 +50,6 @@ const DEFAULT_CONFIG: StashConfig = {
     research: 'minimal',
     review: 'skip',
     auto_proceed: true,
-    auto_merge: true,
   },
   labels: {
     skip_research: 'skip:research',
@@ -66,11 +57,6 @@ const DEFAULT_CONFIG: StashConfig = {
     skip_validation: 'skip:validation',
     deep_research: 'research:deep',
     require_review: 'review:required',
-  },
-  github: {
-    automation_mode: 'auto',
-    app_id_var: 'SKILLSTASH_APP_ID',
-    app_pem_secret: 'SKILLSTASH_APP_PEM',
   },
   validation: {
     required_files: ['SKILL.md'],
@@ -103,7 +89,6 @@ export async function loadConfig(): Promise<StashConfig> {
 
   const defaults = (parsed.defaults ?? {}) as Record<string, unknown>;
   const labels = (parsed.labels ?? {}) as Record<string, unknown>;
-  const github = (parsed.github ?? {}) as Record<string, unknown>;
   const validation = (parsed.validation ?? {}) as Record<string, unknown>;
   const agents = (parsed.agents ?? {}) as Record<string, unknown>;
   const workflow = parsed.workflow;
@@ -131,10 +116,6 @@ export async function loadConfig(): Promise<StashConfig> {
         typeof defaults.auto_proceed === 'boolean'
           ? defaults.auto_proceed
           : DEFAULT_CONFIG.defaults.auto_proceed,
-      auto_merge:
-        typeof defaults.auto_merge === 'boolean'
-          ? defaults.auto_merge
-          : DEFAULT_CONFIG.defaults.auto_merge,
     },
     labels: {
       skip_research: (labels.skip_research as string) ?? DEFAULT_CONFIG.labels.skip_research,
@@ -143,13 +124,6 @@ export async function loadConfig(): Promise<StashConfig> {
         (labels.skip_validation as string) ?? DEFAULT_CONFIG.labels.skip_validation,
       deep_research: (labels.deep_research as string) ?? DEFAULT_CONFIG.labels.deep_research,
       require_review: (labels.require_review as string) ?? DEFAULT_CONFIG.labels.require_review,
-    },
-    github: {
-      automation_mode:
-        (github.automation_mode as GithubConfig['automation_mode']) ??
-        DEFAULT_CONFIG.github.automation_mode,
-      app_id_var: (github.app_id_var as string) ?? DEFAULT_CONFIG.github.app_id_var,
-      app_pem_secret: (github.app_pem_secret as string) ?? DEFAULT_CONFIG.github.app_pem_secret,
     },
     validation: {
       required_files:
@@ -355,28 +329,6 @@ export function resolveReviewMode(
   return config.defaults.review;
 }
 
-export function shouldAutoMerge(labels: string[], config: StashConfig): boolean {
-  return config.defaults.auto_merge && resolveReviewMode(labels, config) !== 'required';
-}
-
-export function resolveAutomationMode(
-  config: StashConfig,
-  appTokenAvailable: boolean,
-): 'app' | 'builtin' {
-  switch (config.github.automation_mode) {
-    case 'app':
-      if (!appTokenAvailable) {
-        console.warn('GitHub App automation requested but no app token is available; falling back to builtin token.');
-        return 'builtin';
-      }
-      return 'app';
-    case 'builtin':
-      return 'builtin';
-    default:
-      return appTokenAvailable ? 'app' : 'builtin';
-  }
-}
-
 export function skillDirectory(name: string): string {
   return join(process.cwd(), 'skills', name);
 }
@@ -402,8 +354,10 @@ export function isKebabCase(name: string): boolean {
   return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(name);
 }
 
-export function branchName(name: string): string {
-  return `feat/skills/${name}`;
+export type BranchAction = 'add' | 'update' | 'remove';
+
+export function branchName(name: string, action: BranchAction = 'add'): string {
+  return `skill/${action}-${name}`;
 }
 
 export function fileBasename(path: string): string {
