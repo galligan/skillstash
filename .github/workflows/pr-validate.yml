@@ -27,6 +27,11 @@ jobs:
       - name: Validate skills
         run: bun run validate
 
+      - name: Validate skills (packager)
+        uses: galligan/skills-packager@v1
+        with:
+          validate-only: 'true'
+
       - name: Markdownlint (warn only)
         run: bun run lint:md
         continue-on-error: true
