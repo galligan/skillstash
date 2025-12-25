@@ -26,6 +26,7 @@ jobs:
 
       - name: Summary
         if: steps.release.outputs.releases != '[]'
+        continue-on-error: true
         env:
           RELEASES: ${{ steps.release.outputs.releases }}
         run: |
