@@ -1,0 +1,35 @@
+name: Release Skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Package and release
+        uses: galligan/skills-packager@v1
+        id: release
+        with:
+          create-release: 'true'
+          skip-unchanged: 'true'
+
+      - name: Summary
+        if: steps.release.outputs.releases != '[]'
+        continue-on-error: true
+        env:
+          RELEASES: ${{ steps.release.outputs.releases }}
+        run: |
+          echo "## Released Skills" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "$RELEASES" | jq -r '.[] | "- [\(.tag)](\(.url))"' >> $GITHUB_STEP_SUMMARY

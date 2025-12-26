@@ -363,3 +363,12 @@ export function branchName(name: string, action: BranchAction = 'add'): string {
 export function fileBasename(path: string): string {
   return basename(path);
 }
+
+export type AutomationMode = 'app' | 'github';
+
+export function resolveAutomationMode(
+  _config: StashConfig,
+  hasAppToken: boolean,
+): AutomationMode {
+  return hasAppToken ? 'app' : 'github';
+}

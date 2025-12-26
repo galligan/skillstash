@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Check if lockfile is up to date
+if ! bun install --frozen-lockfile > /dev/null 2>&1; then
+  echo "❌ bun.lock is out of sync. Run 'bun install' and commit the updated lockfile."
+  exit 1
+fi
+
 bun run lint:md:fix
