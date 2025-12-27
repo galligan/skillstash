@@ -17,6 +17,18 @@
     "bunx"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galligan/skillstash.git",
+    "directory": "packages/create-skillstash"
+  },
+  "homepage": "https://github.com/galligan/skillstash/tree/main/packages/create-skillstash",
+  "bugs": {
+    "url": "https://github.com/galligan/skillstash/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "bun": ">=1.1.0"
   },
