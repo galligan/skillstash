@@ -594,21 +594,22 @@ async function updateClaudeSettings(
     const raw = await readFile(path, 'utf-8');
     const data = JSON.parse(raw) as Record<string, unknown>;
 
-    const marketplaces = (data.extraKnownMarketplaces as Record<string, unknown>) ?? {};
-    const marketplace = (marketplaces[marketplaceName] as Record<string, unknown>) ?? {};
-    const source = (marketplace.source as Record<string, unknown>) ?? {};
-
+    // Clear template defaults and set up user's marketplace
+    const marketplaces: Record<string, unknown> = {};
     if (repoSlug) {
-      source.source = 'github';
-      source.repo = repoSlug;
-      marketplace.source = source;
-      marketplaces[marketplaceName] = marketplace;
-      data.extraKnownMarketplaces = marketplaces;
+      marketplaces[marketplaceName] = {
+        source: {
+          source: 'github',
+          repo: repoSlug,
+        },
+      };
     }
+    data.extraKnownMarketplaces = marketplaces;
 
-    const enabledPlugins = (data.enabledPlugins as Record<string, unknown>) ?? {};
-    enabledPlugins[`${pluginName}@${marketplaceName}`] = true;
-    data.enabledPlugins = enabledPlugins;
+    // Only enable user's plugin
+    data.enabledPlugins = {
+      [`${pluginName}@${marketplaceName}`]: true,
+    };
 
     await writeFile(path, JSON.stringify(data, null, 2) + '\n', 'utf-8');
   } catch {
