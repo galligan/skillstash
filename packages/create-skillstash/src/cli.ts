@@ -118,9 +118,11 @@ async function main(directory: string | undefined, opts: Record<string, unknown>
   }
 
   const repoName = basename(targetPath);
-  const marketplaceName = options.marketplace ?? toKebab(repoName);
   const ownerName = options.ownerName ?? readGitConfig('user.name') ?? 'Skillstash';
   const ownerEmail = options.ownerEmail ?? readGitConfig('user.email') ?? undefined;
+  const userSlug = ghUserLogin() ?? toKebab(ownerName);
+  const marketplaceName = options.marketplace ?? `${userSlug}-skillstash`;
+  const pluginName = 'my-skills';
   let originUrl = options.origin;
   const upstreamRepo = extractRepoFromUrl(templateUrl);
 
@@ -155,11 +157,11 @@ async function main(directory: string | undefined, opts: Record<string, unknown>
   // Update manifests
   const manifestSpinner = ora('Updating manifests...').start();
   try {
-    await updatePluginManifest(targetPath, ownerName, ownerEmail);
+    await updatePluginManifest(targetPath, pluginName, ownerName, ownerEmail);
     await updateMarketplace(targetPath, marketplaceName, ownerName, ownerEmail);
     await updateDefaultAgent(targetPath, options.defaultAgent);
     const repoSlug = resolveRepoSlug(options.createRepoTarget, originUrl);
-    await updateClaudeSettings(targetPath, repoSlug);
+    await updateClaudeSettings(targetPath, repoSlug, marketplaceName, pluginName);
     manifestSpinner.succeed('Manifests updated');
 
     // Setup labels
@@ -204,7 +206,7 @@ async function runInteractiveSetup(options: Options): Promise<SetupAnswers> {
       type: 'input',
       name: 'directory',
       message: 'Repository directory:',
-      default: 'my-skills',
+      default: 'skillstash',
       validate: (input: string) => {
         if (!input.trim()) return 'Directory name is required';
         const path = resolve(process.cwd(), input);
@@ -579,7 +581,12 @@ async function updateDefaultAgent(root: string, agent: 'claude' | 'codex') {
   await writeFile(path, lines.join('\n'), 'utf-8');
 }
 
-async function updateClaudeSettings(root: string, repoSlug: string | undefined) {
+async function updateClaudeSettings(
+  root: string,
+  repoSlug: string | undefined,
+  marketplaceName: string,
+  pluginName: string,
+) {
   const path = join(root, '.claude', 'settings.json');
   if (!existsSync(path)) return;
 
@@ -588,19 +595,19 @@ async function updateClaudeSettings(root: string, repoSlug: string | undefined) 
     const data = JSON.parse(raw) as Record<string, unknown>;
 
     const marketplaces = (data.extraKnownMarketplaces as Record<string, unknown>) ?? {};
-    const skillstashMarketplace = (marketplaces.skillstash as Record<string, unknown>) ?? {};
-    const source = (skillstashMarketplace.source as Record<string, unknown>) ?? {};
+    const marketplace = (marketplaces[marketplaceName] as Record<string, unknown>) ?? {};
+    const source = (marketplace.source as Record<string, unknown>) ?? {};
 
     if (repoSlug) {
       source.source = 'github';
       source.repo = repoSlug;
-      skillstashMarketplace.source = source;
-      marketplaces.skillstash = skillstashMarketplace;
+      marketplace.source = source;
+      marketplaces[marketplaceName] = marketplace;
       data.extraKnownMarketplaces = marketplaces;
     }
 
     const enabledPlugins = (data.enabledPlugins as Record<string, unknown>) ?? {};
-    enabledPlugins['skillstash@skillstash'] = true;
+    enabledPlugins[`${pluginName}@${marketplaceName}`] = true;
     data.enabledPlugins = enabledPlugins;
 
     await writeFile(path, JSON.stringify(data, null, 2) + '\n', 'utf-8');
@@ -609,12 +616,18 @@ async function updateClaudeSettings(root: string, repoSlug: string | undefined) 
   }
 }
 
-async function updatePluginManifest(root: string, ownerName: string, ownerEmail?: string) {
+async function updatePluginManifest(
+  root: string,
+  pluginName: string,
+  ownerName: string,
+  ownerEmail?: string,
+) {
   const path = join(root, '.claude-plugin', 'plugin.json');
   if (!existsSync(path)) return;
 
   const raw = await readFile(path, 'utf-8');
   const data = JSON.parse(raw) as Record<string, unknown>;
+  data.name = pluginName;
   const author: Record<string, string> = { name: ownerName };
   if (ownerEmail) author.email = ownerEmail;
   data.author = author;
