@@ -82,7 +82,7 @@ For cross-tool compatibility details, see the [references/](references/) directo
 ## Frontmatter Fields
 
 | Field | Required | Constraints |
-|-------|----------|-------------|
+| ----- | -------- | ----------- |
 | `name` | Yes | 1-64 chars, lowercase/numbers/hyphens, must match directory |
 | `description` | Yes | 1-1024 chars, describes what + when |
 | `license` | No | License name or reference to bundled file |

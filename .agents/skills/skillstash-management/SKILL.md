@@ -70,14 +70,14 @@ Concrete usage examples.
 ### 3. Required Frontmatter
 
 | Field | Description |
-|-------|-------------|
+| ----- | ----------- |
 | `name` | Must match directory name exactly (kebab-case) |
 | `description` | One-line summary for discovery |
 
 ### 4. Optional Frontmatter
 
 | Field | Description |
-|-------|-------------|
+| ----- | ----------- |
 | `version` | Semver (e.g., `1.0.0`) |
 | `author` | GitHub username |
 | `tags` | Array for categorization |
@@ -88,7 +88,7 @@ Concrete usage examples.
 Skills must pass these checks:
 
 | Rule | Requirement |
-|------|-------------|
+| ---- | ----------- |
 | **SKILL.md exists** | Required file in skill directory |
 | **Valid frontmatter** | YAML must parse, required fields present |
 | **Name matches** | `name` field must equal directory name |
@@ -117,7 +117,7 @@ No git push required for local use.
 Skill branches **must** follow this pattern:
 
 | Pattern | Use case |
-|---------|----------|
+| ------- | -------- |
 | `skill/add-<slug>` | Creating a new skill |
 | `skill/update-<slug>` | Modifying an existing skill |
 | `skill/remove-<slug>` | Deleting a skill |
@@ -142,7 +142,7 @@ gt submit --no-interactive
 PRs touching `skills/**` run the `merge-readiness` check which validates:
 
 | Check | Blocking |
-|-------|----------|
+| ----- | -------- |
 | Branch naming (`skill/*`) | Yes |
 | Required labels exist | No (warning) |
 | Auto-merge enabled | No (warning) |

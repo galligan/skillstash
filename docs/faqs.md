@@ -17,7 +17,7 @@ If you scaffold with `create-skillstash --create-repo`, label setup runs automat
 ### Skip Labels
 
 | Label | Effect |
-|-------|--------|
+| ----- | ------ |
 | `skip:research` | Bypass research phase |
 | `skip:review` | Bypass review phase |
 | `skip:validation` | Bypass validation (use carefully) |
@@ -25,13 +25,13 @@ If you scaffold with `create-skillstash --create-repo`, label setup runs automat
 ### Research Labels
 
 | Label | Effect |
-|-------|--------|
+| ----- | ------ |
 | `research:deep` | Extended research for complex topics |
 
 ### Review Labels
 
 | Label | Effect |
-|-------|--------|
+| ----- | ------ |
 | `review:required` | Force review before merge |
 
 ## URL Generation

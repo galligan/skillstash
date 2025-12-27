@@ -196,7 +196,7 @@ Use labels on issues to control skillstash workflows:
 **Always specify a language for fenced code blocks.** Use `text` for directory trees or plain output.
 
 | Pattern | Language |
-|---------|----------|
+| ------- | -------- |
 | Shell commands | `bash` |
 | Directory trees | `text` |
 | JSON/YAML | `json` / `yaml` |
@@ -210,7 +210,7 @@ Blocks without a language specifier will fail `bun run lint:md`.
 When creating branches for skill work, use this naming pattern:
 
 | Pattern | Use case |
-|---------|----------|
+| ------- | -------- |
 | `skill/add-<slug>` | Creating a new skill |
 | `skill/update-<slug>` | Modifying an existing skill |
 | `skill/remove-<slug>` | Deleting a skill |

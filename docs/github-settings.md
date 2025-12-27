@@ -7,7 +7,7 @@ Recommended settings for skillstash repositories. Configure these at `github.com
 Skill branches must follow this naming pattern:
 
 | Pattern | Use case |
-|---------|----------|
+| ------- | -------- |
 | `skill/add-<slug>` | Creating a new skill |
 | `skill/update-<slug>` | Modifying an existing skill |
 | `skill/remove-<slug>` | Deleting a skill |
@@ -27,7 +27,7 @@ The `merge-readiness` check enforces this convention for PRs that touch `skills/
 ### Merge Button
 
 | Setting | Value | Why |
-|---------|-------|-----|
+| ------- | ----- | --- |
 | Allow merge commits | **Off** | Keeps history clean and linear |
 | Allow squash merging | **On** | Single commit per PR |
 | Allow rebase merging | Optional | Personal preference |
@@ -35,7 +35,7 @@ The `merge-readiness` check enforces this convention for PRs that touch `skills/
 ### Squash Merge Settings
 
 | Setting | Value |
-|---------|-------|
+| ------- | ----- |
 | Default commit message | **Pull request title and description** |
 
 This uses the PR title as the commit subject and the PR description as the commit body, giving you clean, descriptive commits.
@@ -43,7 +43,7 @@ This uses the PR title as the commit subject and the PR description as the commi
 ### Other Options
 
 | Setting | Value | Why |
-|---------|-------|-----|
+| ------- | ----- | --- |
 | Always suggest updating pull request branches | **On** | Keeps PRs current with main |
 | Allow auto-merge | **On** | PRs merge automatically when requirements pass |
 | Automatically delete head branches | **On** | Cleans up merged branches |
@@ -51,7 +51,7 @@ This uses the PR title as the commit subject and the PR description as the commi
 ## General → Issues
 
 | Setting | Value | Why |
-|---------|-------|-----|
+| ------- | ----- | --- |
 | Auto-close issues with merged linked pull requests | **On** | Closes issues when PR merges |
 
 ## Branch Protection Rules
@@ -61,7 +61,7 @@ Create a rule for `main` (or your default branch) at Settings → Branches → A
 ### Recommended Rules
 
 | Rule | Value | Why |
-|------|-------|-----|
+| ---- | ----- | --- |
 | Branch name pattern | `main` | Protects default branch |
 | Require a pull request before merging | **On** | No direct pushes to main |
 | Required approvals | `0` or `1` | Your choice based on team size |
@@ -131,7 +131,7 @@ Once configured, the workflow is:
 The `merge-readiness` workflow runs on PRs that touch `skills/**` and validates:
 
 | Check | Blocking | What it verifies |
-|-------|----------|------------------|
+| ----- | -------- | ---------------- |
 | Branch naming | Yes | Branch follows `skill/add-*`, `skill/update-*`, or `skill/remove-*` |
 | Labels configured | No | Required labels exist (`skip:*`, `review:*`, etc.) |
 | Auto-merge enabled | No | Repository has auto-merge enabled |

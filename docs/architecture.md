@@ -55,7 +55,7 @@ Content here.
 ### Optional Frontmatter
 
 | Field | Description |
-|-------|-------------|
+| ----- | ----------- |
 | `version` | Semver (e.g., `1.0.0`) |
 | `author` | GitHub username |
 | `tags` | Array for categorization |
@@ -66,7 +66,7 @@ Content here.
 Skills must pass these checks:
 
 | Rule | Requirement |
-|------|-------------|
+| ---- | ----------- |
 | SKILL.md exists | Required file in skill directory |
 | Valid frontmatter | YAML parses, required fields present |
 | Name matches | `name` field equals directory name |
@@ -108,7 +108,7 @@ Issue → Research → Authoring → Validation → Review → Merge
 Comment on an issue to trigger actions:
 
 | Command | Action |
-|---------|--------|
+| ------- | ------ |
 | `@skillstash research` | Re-run research |
 | `@skillstash build` | Re-run authoring |
 | `@skillstash review` | Run review |

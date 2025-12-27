@@ -44,7 +44,7 @@ bun run lint:md     # Check markdown formatting
 ## Documentation
 
 | Document | Purpose |
-|----------|---------|
+| -------- | ------- |
 | [architecture.md](./architecture.md) | System design, directory structure, configuration |
 | [faqs.md](./faqs.md) | Common questions, labels, troubleshooting |
 | [github-settings.md](./github-settings.md) | Recommended GitHub repo settings and branch protection |
@@ -59,7 +59,7 @@ bun run lint:md     # Check markdown formatting
 ## Related Files
 
 | File | Purpose |
-|------|---------|
+| ---- | ------- |
 | `.agents/rules/AGENTS.md` | Full agent instructions and validation rules |
 | `.skillstash/config.yml` | Skillstash configuration |
 | `.agents/skills/skillstash-management/SKILL.md` | Internal skill for working with this repo |

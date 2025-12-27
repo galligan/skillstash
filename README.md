@@ -30,7 +30,7 @@ A template repo for building your own skill library through GitHub issues. File 
 ## Learn More
 
 | Doc | What it covers |
-|-----|----------------|
+| --- | -------------- |
 | [docs/README.md](./docs/README.md) | Quick start and overview |
 | [docs/architecture.md](./docs/architecture.md) | How it all works |
 | [docs/faqs.md](./docs/faqs.md) | Common questions |
