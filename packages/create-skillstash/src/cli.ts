@@ -200,15 +200,17 @@ async function runInteractiveSetup(options: Options): Promise<SetupAnswers> {
   const gitName = readGitConfig('user.name');
   const gitEmail = readGitConfig('user.email');
   const ghAvailable = hasGh() && ghAuthed();
+  const ghUsername = ghAvailable ? ghUserLogin() : null;
+  const defaultName = ghUsername ?? gitName ?? 'user';
 
   const answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'directory',
-      message: 'Repository directory:',
-      default: 'skillstash',
+      message: 'Your skillstash name:',
+      default: 'my-skillstash',
       validate: (input: string) => {
-        if (!input.trim()) return 'Directory name is required';
+        if (!input.trim()) return 'Name is required';
         const path = resolve(process.cwd(), input);
         if (existsSync(path) && !isEmptyDir(path)) {
           return `${path} already exists and is not empty`;
@@ -217,32 +219,10 @@ async function runInteractiveSetup(options: Options): Promise<SetupAnswers> {
       },
     },
     {
-      type: 'input',
-      name: 'ownerName',
-      message: 'Your name (for skill attribution):',
-      default: gitName ?? 'Skillstash',
-    },
-    {
-      type: 'input',
-      name: 'ownerEmail',
-      message: 'Your email:',
-      default: gitEmail ?? '',
-    },
-    {
-      type: 'list',
-      name: 'defaultAgent',
-      message: 'Default AI agent:',
-      choices: [
-        { name: 'Claude (Anthropic)', value: 'claude' },
-        { name: 'Codex (OpenAI)', value: 'codex' },
-      ],
-      default: options.defaultAgent,
-    },
-    {
       type: 'confirm',
       name: 'createRepo',
       message: 'Create a GitHub repository?',
-      default: ghAvailable,
+      default: true,
       when: () => ghAvailable,
     },
     {
@@ -257,6 +237,18 @@ async function runInteractiveSetup(options: Options): Promise<SetupAnswers> {
       when: (ans: { createRepo?: boolean }) => ans.createRepo,
     },
     {
+      type: 'input',
+      name: 'ownerName',
+      message: 'Your name (for skill attribution):',
+      default: defaultName,
+    },
+    {
+      type: 'input',
+      name: 'ownerEmail',
+      message: 'Your email (optional):',
+      default: gitEmail ?? '',
+    },
+    {
       type: 'confirm',
       name: 'setupLabels',
       message: 'Set up GitHub labels for skill workflow?',
@@ -269,7 +261,7 @@ async function runInteractiveSetup(options: Options): Promise<SetupAnswers> {
     directory: answers.directory,
     ownerName: answers.ownerName,
     ownerEmail: answers.ownerEmail,
-    defaultAgent: answers.defaultAgent,
+    defaultAgent: options.defaultAgent, // Skip question, use CLI default
     createRepo: answers.createRepo ?? false,
     repoVisibility: answers.repoVisibility,
     setupLabels: answers.setupLabels ?? false,
@@ -330,8 +322,8 @@ function parseOptions(opts: Record<string, unknown>): Options {
 function printSuccess(
   directory: string,
   originUrl: string | undefined,
-  defaultAgent: string,
-  upstreamRepo: string,
+  _defaultAgent: string,
+  _upstreamRepo: string,
 ) {
   console.log('\n✨ Skillstash repository ready!\n');
   console.log('Next steps:');
@@ -345,16 +337,8 @@ function printSuccess(
     console.log('  git push -u origin main');
   }
 
-  console.log('');
-  if (defaultAgent === 'claude') {
-    console.log('Configure Claude credentials for automation:');
-    console.log('  See docs/secrets.md → Claude Code Authentication');
-  } else {
-    console.log('Configure Codex credentials for automation:');
-    console.log('  See docs/secrets.md → Codex Authentication');
-  }
-
-  console.log(`\nWorkflows use actions from: ${upstreamRepo}`);
+  console.log('\nSet up Claude authentication:');
+  console.log('  claude setup-token');
   console.log('');
 }
 
