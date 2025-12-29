@@ -49,6 +49,9 @@ validation:
     - name
     - description
 
+# Internal skillstash skills (research/author/review prompts)
+internal_skills_dir: src/skillstash/skills
+
 # Agent configuration
 agents:
   # Default agent used for all roles unless overridden below.

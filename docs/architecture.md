@@ -12,6 +12,10 @@ skillstash/
 │       ├── references/        # Optional - docs, specs
 │       ├── scripts/           # Optional - executable helpers
 │       └── assets/            # Optional - templates, configs
+├── src/
+│   └── skillstash/
+│       ├── commands/          # Claude Code plugin commands
+│       └── skills/            # Internal Skillstash skills
 ├── .skillstash/
 │   ├── config.yml             # Skillstash configuration
 │   └── labels.json            # GitHub label defaults
@@ -20,9 +24,7 @@ skillstash/
 │   └── marketplace.json        # Claude marketplace (this plugin)
 ├── .agents/
 │   ├── rules/AGENTS.md        # Agent instructions
-│   ├── skills/                # Internal agent skills
 │   └── templates/             # PR/issue templates
-├── commands/                  # Claude Code plugin commands
 ├── docs/                      # This documentation
 ├── packages/                  # Published tools (npm)
 │   └── create-skillstash/      # bunx create-skillstash
@@ -31,7 +33,7 @@ skillstash/
 
 ## Internal Agent Skills
 
-Skillstash uses role-specific skills in `.agents/skills/` so agents can be hot-swapped without changing prompts:
+Skillstash uses role-specific skills in `src/skillstash/skills/` so agents can be hot-swapped without changing prompts:
 
 - `skillstash-research`
 - `skillstash-author`
@@ -143,6 +145,8 @@ validation:
   max_skill_lines: 500
   enforce_kebab_case: true
   required_frontmatter: [name, description]
+
+internal_skills_dir: src/skillstash/skills
 ```
 
 See the config file for full options including MCP servers, rate limits, and GitHub integration.

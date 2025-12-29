@@ -22,6 +22,7 @@ const createMockConfig = (overrides?: Partial<StashConfig>): StashConfig => ({
     required_frontmatter: ['name', 'description'],
     enforce_kebab_case: true,
   },
+  internal_skills_dir: '.agents/skills',
   agents: {
     default: 'claude',
     roles: {

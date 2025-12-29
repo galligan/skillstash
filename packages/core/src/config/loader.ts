@@ -32,6 +32,8 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<StashConf
   const validation = (parsed.validation ?? {}) as Record<string, unknown>;
   const agents = (parsed.agents ?? {}) as Record<string, unknown>;
   const workflow = parsed.workflow;
+  const internalSkillsDir =
+    typeof parsed.internal_skills_dir === 'string' ? parsed.internal_skills_dir.trim() : '';
 
   const defaultAgent = normalizeDefaultAgent(
     typeof agents.default === 'string' ? agents.default : agents.provider,
@@ -81,6 +83,8 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<StashConf
         (validation.required_frontmatter as string[]) ??
         DEFAULT_CONFIG.validation.required_frontmatter,
     },
+    internal_skills_dir:
+      internalSkillsDir !== '' ? internalSkillsDir : DEFAULT_CONFIG.internal_skills_dir,
     agents: {
       default: defaultAgent,
       roles: {
