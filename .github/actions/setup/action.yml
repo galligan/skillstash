@@ -29,11 +29,15 @@ runs:
       with:
         bun-version: ${{ inputs.bun-version }}
 
-    - name: Install @skillstash/core
+    - name: Install dependencies
       shell: bash
       run: |
         if [ -f "bun.lockb" ] || [ -f "package.json" ]; then
           bun install --frozen-lockfile 2>/dev/null || bun install
-        else
-          bun add @skillstash/core@latest
         fi
+
+    - name: Install @skillstash/core
+      shell: bash
+      run: |
+        # Always ensure @skillstash/core is available for workflows
+        bun add @skillstash/core@latest
