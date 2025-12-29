@@ -40,6 +40,7 @@ export type StashConfig = {
   defaults: DefaultsConfig;
   labels: LabelsConfig;
   validation: ValidationConfig;
+  internal_skills_dir: string;
   agents: AgentsConfig;
   workflow: WorkflowStep[];
 };

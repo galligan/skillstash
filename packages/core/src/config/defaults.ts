@@ -23,6 +23,7 @@ export const DEFAULT_CONFIG: StashConfig = {
     enforce_kebab_case: true,
     required_frontmatter: ['name', 'description'],
   },
+  internal_skills_dir: '.agents/skills',
   agents: {
     default: 'claude',
     roles: {

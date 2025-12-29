@@ -65,7 +65,7 @@ const CONTENT_REPLACEMENTS = [
 
 const DIRECTORY_RENAMES = [
   { from: '.skills-factory', to: '.skillstash' },
-  { from: 'skills/skills-factory-management', to: '.agents/skills/skillstash-management' },
+  { from: 'skills/skills-factory-management', to: 'src/skillstash/skills/skillstash-management' },
 ];
 
 async function* walkFiles(dir: string): AsyncGenerator<string> {

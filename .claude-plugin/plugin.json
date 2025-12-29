@@ -6,9 +6,9 @@
     "name": "Skillstash"
   },
   "commands": [
-    "./commands/"
+    "../src/skillstash/commands/"
   ],
   "skills": [
-    "../.agents/skills/"
+    "../skills/"
   ]
 }

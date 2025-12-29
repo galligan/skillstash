@@ -41,6 +41,7 @@ export type StashConfig = {
   defaults: DefaultsConfig;
   labels: LabelsConfig;
   validation: ValidationConfig;
+  internal_skills_dir: string;
   agents: AgentsConfig;
   workflow: WorkflowStep[];
 };
@@ -64,6 +65,7 @@ const DEFAULT_CONFIG: StashConfig = {
     enforce_kebab_case: true,
     required_frontmatter: ['name', 'description'],
   },
+  internal_skills_dir: '.agents/skills',
   agents: {
     default: 'claude',
     roles: {
@@ -92,6 +94,8 @@ export async function loadConfig(): Promise<StashConfig> {
   const validation = (parsed.validation ?? {}) as Record<string, unknown>;
   const agents = (parsed.agents ?? {}) as Record<string, unknown>;
   const workflow = parsed.workflow;
+  const internalSkillsDir =
+    typeof parsed.internal_skills_dir === 'string' ? parsed.internal_skills_dir.trim() : '';
 
   const defaultAgent = normalizeDefaultAgent(
     typeof agents.default === 'string' ? agents.default : agents.provider,
@@ -140,6 +144,8 @@ export async function loadConfig(): Promise<StashConfig> {
         (validation.required_frontmatter as string[]) ??
         DEFAULT_CONFIG.validation.required_frontmatter,
     },
+    internal_skills_dir:
+      internalSkillsDir !== '' ? internalSkillsDir : DEFAULT_CONFIG.internal_skills_dir,
     agents: {
       default: defaultAgent,
       roles: {
@@ -226,13 +232,26 @@ const SKILLSTASH_ROLE_SKILL = {
   review: 'skillstash-review',
 } as const;
 
-export function skillstashSkillPath(role: WorkflowRole): string {
+function resolveInternalSkillsDir(value?: string): string {
+  if (typeof value !== 'string') {
+    return '.agents/skills';
+  }
+  const trimmed = value.trim();
+  return trimmed !== '' ? trimmed : '.agents/skills';
+}
+
+export function skillstashSkillPath(
+  role: WorkflowRole,
+  internalSkillsDir?: string,
+): string {
   const skillName = SKILLSTASH_ROLE_SKILL[role];
-  return join(process.cwd(), '.agents', 'skills', skillName, 'SKILL.md');
+  const baseDir = resolveInternalSkillsDir(internalSkillsDir);
+  return join(process.cwd(), baseDir, skillName, 'SKILL.md');
 }
 
 export async function loadSkillstashSkill(role: WorkflowRole): Promise<string> {
-  const path = skillstashSkillPath(role);
+  const config = await loadConfig();
+  const path = skillstashSkillPath(role, config.internal_skills_dir);
   return Bun.file(path).text();
 }
 

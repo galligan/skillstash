@@ -3,6 +3,7 @@
  */
 
 import { join } from 'node:path';
+import { loadConfig } from '../config/index.js';
 import type { WorkflowRole } from '../config/types.js';
 
 /**
@@ -25,12 +26,25 @@ const SKILLSTASH_ROLE_SKILL = {
   review: 'skillstash-review',
 } as const;
 
+function resolveInternalSkillsDir(value?: string): string {
+  if (typeof value !== 'string') {
+    return '.agents/skills';
+  }
+  const trimmed = value.trim();
+  return trimmed !== '' ? trimmed : '.agents/skills';
+}
+
 /**
  * Get the path to a skillstash internal skill
  */
-export function skillstashSkillPath(role: WorkflowRole, cwd: string = process.cwd()): string {
+export function skillstashSkillPath(
+  role: WorkflowRole,
+  cwd: string = process.cwd(),
+  internalSkillsDir?: string,
+): string {
   const skillName = SKILLSTASH_ROLE_SKILL[role];
-  return join(cwd, '.agents', 'skills', skillName, 'SKILL.md');
+  const baseDir = resolveInternalSkillsDir(internalSkillsDir);
+  return join(cwd, baseDir, skillName, 'SKILL.md');
 }
 
 /**
@@ -40,7 +54,8 @@ export async function loadSkillstashSkill(
   role: WorkflowRole,
   cwd: string = process.cwd(),
 ): Promise<string> {
-  const path = skillstashSkillPath(role, cwd);
+  const config = await loadConfig(cwd);
+  const path = skillstashSkillPath(role, cwd, config.internal_skills_dir);
   return Bun.file(path).text();
 }
 

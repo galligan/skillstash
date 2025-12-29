@@ -62,4 +62,4 @@ bun run lint:md     # Check markdown formatting
 | ---- | ------- |
 | `.agents/rules/AGENTS.md` | Full agent instructions and validation rules |
 | `.skillstash/config.yml` | Skillstash configuration |
-| `.agents/skills/skillstash-management/SKILL.md` | Internal skill for working with this repo |
+| `src/skillstash/skills/skillstash-management/SKILL.md` | Internal skill for working with this repo |
