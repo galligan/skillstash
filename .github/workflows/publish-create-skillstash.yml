@@ -19,6 +19,7 @@ jobs:
       (github.event_name == 'push' && startsWith(github.ref_name, 'create-skillstash-v')) ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    environment: npm
     permissions:
       contents: read
       id-token: write # For npm provenance
