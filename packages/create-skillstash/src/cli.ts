@@ -521,7 +521,7 @@ async function createRepoWithGh(
   }
 
   const visibilityFlag = visibility === 'private' ? '--private' : '--public';
-  run('gh', ['repo', 'create', `${owner}/${finalRepoName}`, visibilityFlag, '--confirm']);
+  run('gh', ['repo', 'create', `${owner}/${finalRepoName}`, visibilityFlag]);
 
   return `https://github.com/${owner}/${finalRepoName}.git`;
 }
