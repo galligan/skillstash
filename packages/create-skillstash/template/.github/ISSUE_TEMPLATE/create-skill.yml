@@ -1,0 +1,41 @@
+name: Create Skill
+description: Request a new agent skill
+title: "skill: "
+labels: ["skill:create"]
+body:
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill name
+      description: Use kebab-case (e.g., apple-hig, react-testing)
+      placeholder: my-skill-name
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What should this skill do?
+      description: Describe the skill's purpose and when it should activate
+    validations:
+      required: true
+
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources to research (optional)
+      description: URLs or topics to investigate
+      placeholder: |
+        - https://developer.apple.com/design/human-interface-guidelines/
+        - Apple HIG documentation
+
+  - type: dropdown
+    id: research-depth
+    attributes:
+      label: Research depth
+      options:
+        - Minimal (quick validation)
+        - None (I'll provide the content)
+        - Deep (comprehensive research)
+    validations:
+      required: true

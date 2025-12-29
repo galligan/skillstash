@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, rmSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { existsSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { copyFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import inquirer from 'inquirer';
@@ -17,6 +18,9 @@ const fmt = {
   dim: (text: string) => chalk.dim(text),
   cmd: (text: string) => chalk.yellow(text),
 };
+
+const DEFAULT_TEMPLATE = 'galligan/skillstash';
+const TEMPLATE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template');
 
 function drawBox(title: string, lines: string[]): string {
   const maxContentWidth = Math.max(title.length, ...lines.map((l) => l.length));
@@ -70,6 +74,15 @@ interface Options {
   interactive: boolean;
 }
 
+type TemplateSource = 'bundled' | 'local' | 'remote';
+
+interface TemplateInfo {
+  source: TemplateSource;
+  path?: string;
+  url?: string;
+  upstreamRepo: string;
+}
+
 // ============================================================================
 // CLI Setup
 // ============================================================================
@@ -79,7 +92,7 @@ const program = new Command()
   .description('Scaffold a Skillstash repository for managing agent skills')
   .version('0.1.0')
   .argument('[directory]', 'Target directory for the new repository')
-  .option('-t, --template <repo>', 'Template repo (owner/repo or URL)', 'galligan/skillstash')
+  .option('-t, --template <repo>', 'Template source (owner/repo, URL, or local path)', DEFAULT_TEMPLATE)
   .option('--marketplace <name>', 'Marketplace name (default: directory in kebab-case)')
   .option('--owner-name <name>', 'Marketplace owner name')
   .option('--origin <repo>', 'Set origin remote (owner/repo or URL)')
@@ -90,7 +103,7 @@ const program = new Command()
   .option('--setup-labels', 'Create default GitHub labels')
   .option('--skip-label-setup', 'Skip label setup')
   .option('--upstream', 'Keep template as upstream remote (default: true)')
-  .option('--no-upstream', 'Remove template remote after clone')
+  .option('--no-upstream', 'Remove upstream remote after setup')
   .option('--no-interactive', 'Skip interactive prompts')
   .action(main);
 
@@ -138,14 +151,27 @@ async function main(directory: string | undefined, opts: Record<string, unknown>
     process.exit(1);
   }
 
-  // Clone template
-  const templateUrl = normalizeTemplateUrl(options.template);
-  const cloneSpinner = ora('Cloning template repository...').start();
+  const isLocalTemplate = templateExists(options.template);
+  const templateInfo = resolveTemplateInfo(options.template, isLocalTemplate);
+  const templateSpinner = ora('Setting up template...').start();
   try {
-    runQuiet('git', ['clone', templateUrl, targetPath]);
-    cloneSpinner.succeed('Template cloned');
+    if (templateInfo.source === 'bundled') {
+      await copyDir(TEMPLATE_ROOT, targetPath);
+    } else if (templateInfo.source === 'local') {
+      if (!templateInfo.path) {
+        throw new Error('Local template path not provided');
+      }
+      await copyDir(templateInfo.path, targetPath);
+    } else {
+      if (!templateInfo.url) {
+        throw new Error('Template URL not provided');
+      }
+      runQuiet('git', ['clone', '--depth', '1', templateInfo.url, targetPath]);
+    }
+    removeGitMetadata(targetPath);
+    templateSpinner.succeed('Template ready');
   } catch {
-    cloneSpinner.fail('Failed to clone template');
+    templateSpinner.fail('Failed to set up template');
     process.exit(1);
   }
 
@@ -155,16 +181,16 @@ async function main(directory: string | undefined, opts: Record<string, unknown>
   const marketplaceName = options.marketplace ?? `${userSlug}-skillstash`;
   const pluginName = 'my-skills';
   let originUrl = options.origin;
-  const upstreamRepo = extractRepoFromUrl(templateUrl);
+  const upstreamRepo = templateInfo.upstreamRepo;
+  const templateUrl = templateInfo.url ?? normalizeTemplateUrl(upstreamRepo);
 
   // Setup steps with spinners
   const setupSpinner = ora('Setting up repository...').start();
   try {
-    cleanupAutomation(targetPath);
+    setupSpinner.text = 'Initializing git repository...';
+    initGitRepo(targetPath);
     setupSpinner.text = 'Generating workflow files...';
     await generateWorkflows(targetPath, upstreamRepo);
-    setupSpinner.text = 'Generating lefthook config...';
-    await generateLefthook(targetPath);
     setupSpinner.text = 'Generating package.json...';
     await generatePackageJson(targetPath, repoName);
     setupSpinner.succeed('Repository configured');
@@ -230,7 +256,7 @@ async function main(directory: string | undefined, opts: Record<string, unknown>
   }
 
   // Print success message
-  printSuccess(directory, originUrl, options.defaultAgent, upstreamRepo);
+  printSuccess(directory, originUrl);
 }
 
 // ============================================================================
@@ -345,15 +371,11 @@ function parseOptions(opts: Record<string, unknown>): Options {
 // Success Output
 // ============================================================================
 
-function printSuccess(
-  directory: string,
-  originUrl: string | undefined,
-  _defaultAgent: string,
-  _upstreamRepo: string,
-) {
+function printSuccess(directory: string, originUrl: string | undefined) {
   console.log(`\n${drawBox('Skillstash repository ready!', [])}`);
   console.log(`\n${fmt.bold('→ Next Steps')}`);
-  console.log(`  ${fmt.cmd(`cd ${directory} && bun install`)}`);
+  console.log(`  ${fmt.cmd(`cd ${directory}`)}`);
+  console.log(`  ${fmt.cmd('bunx @skillstash/core validate')}  ${fmt.dim('# Validate skills')}`);
 
   if (originUrl) {
     console.log(`  ${fmt.cmd('git push -u origin main')}`);
@@ -362,13 +384,96 @@ function printSuccess(
     console.log(`  ${fmt.cmd('git push -u origin main')}`);
   }
 
-  console.log(`  ${fmt.cmd('claude setup-token')}  ${fmt.dim('# Set up Claude GitHub Actions for automation')}`);
   console.log('');
 }
 
 // ============================================================================
 // Utility Functions
 // ============================================================================
+
+function resolveTemplatePath(template: string): string {
+  return resolve(process.cwd(), template);
+}
+
+function templateExists(template: string): boolean {
+  if (template.startsWith('http://') || template.startsWith('https://') || template.startsWith('git@')) {
+    return false;
+  }
+  const resolved = resolveTemplatePath(template);
+  if (!existsSync(resolved)) return false;
+  try {
+    return statSync(resolved).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function isDefaultTemplate(template: string): boolean {
+  return template === DEFAULT_TEMPLATE;
+}
+
+function resolveTemplateInfo(template: string, isLocal: boolean): TemplateInfo {
+  if (isLocal) {
+    return {
+      source: 'local',
+      path: resolveTemplatePath(template),
+      upstreamRepo: DEFAULT_TEMPLATE,
+    };
+  }
+
+  if (isDefaultTemplate(template)) {
+    return {
+      source: 'bundled',
+      upstreamRepo: DEFAULT_TEMPLATE,
+    };
+  }
+
+  const url = normalizeTemplateUrl(template);
+  return {
+    source: 'remote',
+    url,
+    upstreamRepo: extractRepoFromUrl(url),
+  };
+}
+
+async function copyDir(source: string, destination: string): Promise<void> {
+  await mkdir(destination, { recursive: true });
+  const entries = await readdir(source, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name === '.git') continue;
+    const srcPath = join(source, entry.name);
+    const destPath = join(destination, entry.name);
+    if (entry.isDirectory()) {
+      await copyDir(srcPath, destPath);
+    } else {
+      await copyFile(srcPath, destPath);
+    }
+  }
+}
+
+function removeGitMetadata(root: string) {
+  const gitPath = join(root, '.git');
+  if (existsSync(gitPath)) {
+    rmSync(gitPath, { recursive: true, force: true });
+  }
+  const gitModules = join(root, '.gitmodules');
+  if (existsSync(gitModules)) {
+    rmSync(gitModules, { force: true });
+  }
+}
+
+function initGitRepo(root: string) {
+  try {
+    runQuiet('git', ['-C', root, 'init', '-b', 'main']);
+  } catch {
+    runQuiet('git', ['-C', root, 'init']);
+    try {
+      runQuiet('git', ['-C', root, 'branch', '-M', 'main']);
+    } catch {
+      // Ignore branch rename failures.
+    }
+  }
+}
 
 function normalizeTemplateUrl(template: string): string {
   if (template.startsWith('http://') || template.startsWith('https://')) {
@@ -408,7 +513,7 @@ function extractRepoFromUrl(url: string): string {
   if (sshMatch?.[1]) {
     return sshMatch[1];
   }
-  return 'galligan/skillstash';
+  return DEFAULT_TEMPLATE;
 }
 
 function resolveRepoSlug(explicit: string | undefined, origin: string | undefined): string | undefined {
@@ -706,50 +811,6 @@ async function updateGitRemotes(
 // Repository Setup Functions
 // ============================================================================
 
-function cleanupAutomation(root: string) {
-  const dirsToRemove = [
-    'scripts/automation',
-    'scripts/sync',
-    'scripts/lint',
-    'packages',
-    '.githooks',
-    '.github/actions',
-    '.github/workflows', // Remove template workflows, regenerated later
-  ];
-
-  const filesToRemove = [
-    'scripts/setup-git-hooks.ts',
-    'bun.lock',
-    'tsconfig.json',
-  ];
-
-  for (const dir of dirsToRemove) {
-    const path = join(root, dir);
-    if (existsSync(path)) {
-      rmSync(path, { recursive: true, force: true });
-    }
-  }
-
-  for (const file of filesToRemove) {
-    const path = join(root, file);
-    if (existsSync(path)) {
-      rmSync(path, { force: true });
-    }
-  }
-
-  const scriptsDir = join(root, 'scripts');
-  if (existsSync(scriptsDir)) {
-    try {
-      const remaining = readdirSync(scriptsDir);
-      if (remaining.length === 0) {
-        rmSync(scriptsDir, { recursive: true, force: true });
-      }
-    } catch {
-      // Ignore
-    }
-  }
-}
-
 async function generateWorkflows(root: string, upstreamRepo: string) {
   const workflowsDir = join(root, '.github', 'workflows');
   await mkdir(workflowsDir, { recursive: true });
@@ -846,34 +907,6 @@ jobs:
   await writeFile(join(workflowsDir, 'release.yml'), releaseWorkflow);
 }
 
-async function generateLefthook(root: string) {
-  const lefthookConfig = `# Lefthook configuration
-# https://github.com/evilmartians/lefthook
-
-pre-commit:
-  parallel: true
-  commands:
-    lockfile:
-      run: bun install --frozen-lockfile > /dev/null 2>&1 || (echo "[error] Lockfile mismatch - bun.lock does not match package.json. Run 'bun install' to update the lockfile, then stage and commit it." && exit 1)
-      skip:
-        - merge
-        - rebase
-
-    lint-md:
-      glob: "*.md"
-      run: bunx markdownlint-cli2 --fix {staged_files} && git add {staged_files}
-
-    validate-skills:
-      glob: "skills/**/*.md"
-      run: bunx @skillstash/core validate
-      skip:
-        - merge
-        - rebase
-`;
-
-  await writeFile(join(root, 'lefthook.yml'), lefthookConfig);
-}
-
 async function generatePackageJson(root: string, repoName: string) {
   const packageJson = {
     name: toKebab(repoName),
@@ -884,10 +917,6 @@ async function generatePackageJson(root: string, repoName: string) {
       validate: 'bunx @skillstash/core validate',
       'lint:md': 'bunx markdownlint-cli2 --config .markdownlint-cli2.jsonc',
       'lint:md:fix': 'bunx markdownlint-cli2 --config .markdownlint-cli2.jsonc --fix',
-      prepare: 'lefthook install',
-    },
-    devDependencies: {
-      '@evilmartians/lefthook': '^2.0.13',
     },
   };
 

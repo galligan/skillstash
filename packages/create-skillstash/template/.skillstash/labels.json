@@ -1,0 +1,57 @@
+[
+  {
+    "name": "skill:create",
+    "color": "0E8A16",
+    "description": "Create a new skill from an issue"
+  },
+  {
+    "name": "skip:research",
+    "color": "D93F0B",
+    "description": "Skip research phase"
+  },
+  {
+    "name": "skip:review",
+    "color": "D93F0B",
+    "description": "Skip review phase"
+  },
+  {
+    "name": "skip:validation",
+    "color": "D93F0B",
+    "description": "Skip validation checks"
+  },
+  {
+    "name": "research:deep",
+    "color": "5319E7",
+    "description": "Extended research for complex topics"
+  },
+  {
+    "name": "research:quick",
+    "color": "5319E7",
+    "description": "Minimal research for well-known topics"
+  },
+  {
+    "name": "review:required",
+    "color": "B60205",
+    "description": "Mandatory human review before merge"
+  },
+  {
+    "name": "review:security",
+    "color": "B60205",
+    "description": "Security-focused review required"
+  },
+  {
+    "name": "review:performance",
+    "color": "FBCA04",
+    "description": "Performance review required"
+  },
+  {
+    "name": "workflow:experimental",
+    "color": "C2E0C6",
+    "description": "Experimental workflow or skill"
+  },
+  {
+    "name": "workflow:breaking",
+    "color": "B60205",
+    "description": "Breaking change to existing skills"
+  }
+]

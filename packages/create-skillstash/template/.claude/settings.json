@@ -1,0 +1,15 @@
+{
+  "enabledPlugins": {
+    "skillstash@skillstash": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "skillstash": {
+      "source": {
+        "source": "github",
+        "repo": "galligan/skillstash"
+      }
+    }
+  },
+  "projectInstructions": "See AGENTS.md"
+}

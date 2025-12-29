@@ -1,0 +1,14 @@
+{
+  "name": "skillstash",
+  "description": "Skillstash workflows and skills for authoring agent skills",
+  "version": "0.1.0",
+  "author": {
+    "name": "Skillstash"
+  },
+  "commands": [
+    "../src/skillstash/commands/"
+  ],
+  "skills": [
+    "../skills/"
+  ]
+}
