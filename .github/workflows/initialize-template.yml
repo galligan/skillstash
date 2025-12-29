@@ -1,0 +1,269 @@
+name: Initialize from Template
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  initialize:
+    # Skip if this is the template repo itself
+    if: github.repository != 'galligan/skillstash'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if already initialized
+        id: check
+        run: |
+          if [ -f ".initialized" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Repository already initialized, skipping setup"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Initializing repository from template..."
+          fi
+
+      - name: Setup Bun
+        if: steps.check.outputs.skip != 'true'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Initialize repository
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -e
+
+          # Extract owner and repo name
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          MARKETPLACE_NAME="${OWNER}-skillstash"
+          PLUGIN_NAME="my-skills"
+
+          echo "Owner: $OWNER"
+          echo "Repo: $REPO_NAME"
+          echo "Marketplace: $MARKETPLACE_NAME"
+
+          # ============================================================
+          # Clean up template-specific files and directories
+          # ============================================================
+          echo "Cleaning up template files..."
+
+          rm -rf scripts/automation scripts/sync scripts/lint packages .githooks .github/actions
+          rm -f scripts/setup-git-hooks.ts bun.lock tsconfig.json
+          rmdir scripts 2>/dev/null || true
+
+          # Remove template-specific workflows
+          rm -f .github/workflows/release-please.yml
+          rm -f .github/workflows/publish-create-skillstash.yml
+          rm -f .github/workflows/pr-author-skill.yml
+          rm -f .github/workflows/pr-review-skill.yml
+          rm -f .github/workflows/initialize-template.yml
+
+          # ============================================================
+          # Update plugin manifest
+          # ============================================================
+          echo "Updating plugin manifest..."
+
+          if [ -f ".claude-plugin/plugin.json" ]; then
+            tmp=$(mktemp)
+            jq --arg name "$PLUGIN_NAME" --arg owner "$OWNER" \
+              '.name = $name | .author = {"name": $owner}' \
+              .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
+          fi
+
+          # ============================================================
+          # Update marketplace manifest
+          # ============================================================
+          echo "Updating marketplace manifest..."
+
+          if [ -f ".claude-plugin/marketplace.json" ]; then
+            tmp=$(mktemp)
+            jq --arg name "$MARKETPLACE_NAME" --arg owner "$OWNER" \
+              '.name = $name | .owner = {"name": $owner} | .plugins = (.plugins // [] | map(.author = {"name": $owner}))' \
+              .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
+          fi
+
+          # ============================================================
+          # Update Claude settings
+          # ============================================================
+          echo "Updating Claude settings..."
+
+          if [ -f ".claude/settings.json" ]; then
+            tmp=$(mktemp)
+            jq --arg marketplace "$MARKETPLACE_NAME" --arg repo "$GITHUB_REPOSITORY" --arg plugin "$PLUGIN_NAME" \
+              '.extraKnownMarketplaces = {($marketplace): {"source": {"source": "github", "repo": $repo}}} | .enabledPlugins = {(($plugin) + "@" + ($marketplace)): true}' \
+              .claude/settings.json > "$tmp" && mv "$tmp" .claude/settings.json
+          fi
+
+          # ============================================================
+          # Generate workflows
+          # ============================================================
+          echo "Generating workflows..."
+
+          mkdir -p .github/workflows
+
+          cat > .github/workflows/validate.yml << 'WORKFLOW'
+          name: Validate Skills
+
+          on:
+            pull_request:
+              paths:
+                - "skills/**"
+            push:
+              branches: [main]
+              paths:
+                - "skills/**"
+
+          jobs:
+            validate:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                - uses: galligan/skillstash/.github/actions/setup@main
+                - uses: galligan/skillstash/.github/actions/validate@main
+          WORKFLOW
+
+          cat > .github/workflows/issue-create-skill.yml << 'WORKFLOW'
+          name: Issue Create Skill
+
+          on:
+            issues:
+              types: [labeled]
+
+          jobs:
+            create-skill:
+              if: github.event.label.name == 'skill:create'
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                  with:
+                    fetch-depth: 0
+                - uses: galligan/skillstash/.github/actions/setup@main
+                - uses: galligan/skillstash/.github/actions/create-skill@main
+                  with:
+                    github-token: ${{ github.token }}
+          WORKFLOW
+
+          cat > .github/workflows/merge-readiness.yml << 'WORKFLOW'
+          name: Merge Readiness
+
+          on:
+            pull_request:
+              types: [opened, synchronize, reopened]
+              paths:
+                - "skills/**"
+
+          jobs:
+            check-readiness:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                - uses: galligan/skillstash/.github/actions/setup@main
+                - uses: galligan/skillstash/.github/actions/merge-readiness@main
+                  with:
+                    github-token: ${{ github.token }}
+          WORKFLOW
+
+          cat > .github/workflows/release.yml << 'WORKFLOW'
+          name: Release Skills
+
+          on:
+            push:
+              branches: [main]
+              paths:
+                - "skills/**"
+
+          jobs:
+            release:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                  with:
+                    fetch-depth: 0
+                - uses: galligan/skills-packager@v1
+                  with:
+                    github-token: ${{ github.token }}
+          WORKFLOW
+
+          # ============================================================
+          # Generate lefthook config
+          # ============================================================
+          echo "Generating lefthook config..."
+
+          cat > lefthook.yml << 'LEFTHOOK'
+          # Lefthook configuration
+          # https://github.com/evilmartians/lefthook
+
+          pre-commit:
+            parallel: true
+            commands:
+              lockfile:
+                run: bun install --frozen-lockfile > /dev/null 2>&1 || (echo "[error] Lockfile mismatch - bun.lock does not match package.json. Run 'bun install' to update the lockfile, then stage and commit it." && exit 1)
+                skip:
+                  - merge
+                  - rebase
+
+              lint-md:
+                glob: "*.md"
+                run: bunx markdownlint-cli2 --fix {staged_files} && git add {staged_files}
+
+              validate-skills:
+                glob: "skills/**/*.md"
+                run: bunx @skillstash/core validate
+                skip:
+                  - merge
+                  - rebase
+          LEFTHOOK
+
+          # ============================================================
+          # Generate package.json
+          # ============================================================
+          echo "Generating package.json..."
+
+          REPO_SLUG=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//')
+
+          cat > package.json << PACKAGEJSON
+          {
+            "name": "$REPO_SLUG",
+            "version": "0.1.0",
+            "type": "module",
+            "description": "Skills repository powered by Skillstash",
+            "scripts": {
+              "validate": "bunx @skillstash/core validate",
+              "lint:md": "bunx markdownlint-cli2 --config .markdownlint-cli2.jsonc",
+              "lint:md:fix": "bunx markdownlint-cli2 --config .markdownlint-cli2.jsonc --fix",
+              "prepare": "lefthook install"
+            },
+            "devDependencies": {
+              "@evilmartians/lefthook": "^2.0.13"
+            }
+          }
+          PACKAGEJSON
+
+          # ============================================================
+          # Install dependencies and create lockfile
+          # ============================================================
+          echo "Installing dependencies..."
+          bun install
+
+          # ============================================================
+          # Create initialization marker
+          # ============================================================
+          touch .initialized
+
+          echo "Initialization complete!"
+
+      - name: Commit and push changes
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: initialize from skillstash template"
+          git push

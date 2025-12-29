@@ -23,9 +23,26 @@ A template repo for building your own skill library through GitHub issues. File 
 
 ## Get Started
 
-1. **Scaffold a new repo** → `bunx create-skillstash my-skillstash --create-repo`
-2. **Set up secrets** → `docs/secrets.md`
-3. **File a skill issue** → Use the “Create skill” issue template
+### Option 1: Use the CLI (recommended)
+
+```bash
+bunx create-skillstash my-skillstash --create-repo
+```
+
+The CLI walks you through setup interactively and configures everything locally.
+
+### Option 2: Use as GitHub Template
+
+1. Click **"Use this template"** → **"Create a new repository"** on GitHub
+2. Wait for the initialization workflow to complete (~30 seconds)
+3. Clone your new repo and run `bun install`
+
+Both options set up the same thing - choose whichever fits your workflow.
+
+### Next Steps
+
+1. **Set up secrets** → [docs/secrets.md](./docs/secrets.md)
+2. **File a skill issue** → Use the "Create skill" issue template
 
 ## Learn More
 
