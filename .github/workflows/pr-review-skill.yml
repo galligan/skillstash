@@ -3,11 +3,13 @@ name: PR Review Skill
 on:
   pull_request:
     types: [ready_for_review]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   review-skill:
-    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
+    # Only run on skill/* branches (skill/add-*, skill/update-*, skill/remove-*)
+    if: startsWith(github.head_ref, 'skill/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

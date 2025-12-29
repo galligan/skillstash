@@ -3,14 +3,16 @@ name: PR Author Skill
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   author-skill:
+    # Only run on skill/* branches (skill/add-*, skill/update-*, skill/remove-*)
     if: |
       github.event.pull_request &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      !startsWith(github.head_ref, 'release-please--')
+      startsWith(github.head_ref, 'skill/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
